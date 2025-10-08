@@ -1,0 +1,33 @@
+/* ===============================
+   🌈 Theme Colors
+================================ */
+:root {
+  --gradient-from: #db2777; /* Tailwind pink-600 */
+  --gradient-to: #7e22ce;   /* Tailwind purple-700 */
+  --hover-opacity: 0.9;
+  --text-color: #ffffff;
+}
+
+/* ===============================
+   🌟 Reusable Classes
+================================ */
+.btn-gradient {
+  background: linear-gradient(to right, var(--gradient-from), var(--gradient-to));
+  color: var(--text-color);
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  opacity: var(--hover-opacity);
+}
+
+/* Optional: consistent link hover color */
+.nav-link {
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--gradient-from);
+}
