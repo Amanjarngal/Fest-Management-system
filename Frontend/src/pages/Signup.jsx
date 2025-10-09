@@ -1,39 +1,48 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
+// import { toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Handle signup
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
+      // Create user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
+      // Add display name
       await updateProfile(userCredential.user, {
         displayName: formData.name,
       });
 
-      navigate("/login"); // ✅ redirect to login instead of home
-    } catch (err) {
-      setError(err.message);
+      // ✅ Immediately sign out after signup
+      await signOut(auth);
+
+      toast.success("Account created successfully! Please login to continue.");
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -53,6 +62,7 @@ const Signup = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name */}
           <div>
             <label className="block text-sm font-semibold mb-2">Full Name</label>
             <input
@@ -65,6 +75,7 @@ const Signup = () => {
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-semibold mb-2">Email Address</label>
             <input
@@ -77,6 +88,7 @@ const Signup = () => {
             />
           </div>
 
+          {/* Password */}
           <div className="relative">
             <label className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -85,6 +97,7 @@ const Signup = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              minLength={6}
               className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 pr-10"
             />
             <button
@@ -96,20 +109,24 @@ const Signup = () => {
             </button>
           </div>
 
-          {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
-
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
             className="btn-gradient w-full py-3 text-lg font-semibold rounded-full flex justify-center items-center space-x-2 transition-transform duration-200 hover:scale-[1.02]"
           >
-            {loading ? <span>Creating Account...</span> : <>
-              <span>Sign Up</span>
-              <ArrowRight size={20} />
-            </>}
+            {loading ? (
+              <span>Creating Account...</span>
+            ) : (
+              <>
+                <span>Sign Up</span>
+                <ArrowRight size={20} />
+              </>
+            )}
           </button>
         </form>
 
+        {/* Footer */}
         <p className="text-gray-400 text-center mt-6">
           Already have an account?{" "}
           <Link to="/login" className="text-purple-400 hover:underline font-medium">
