@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ArrowRight, Megaphone, User, KeyRound, ChevronDown, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  ArrowRight,
+  Megaphone,
+  User,
+  KeyRound,
+  ChevronDown,
+  LogOut,
+} from "lucide-react";
 import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -116,7 +125,7 @@ const Navbar = () => {
               </button>
 
               {accountDropdown && (
-                <ul className="absolute right  bg-black border border-gray-800 rounded-lg shadow-lg w-44 text-base">
+                <ul className="absolute right-0 bg-black border border-gray-800 rounded-lg shadow-lg w-44 text-base">
                   {user ? (
                     <>
                       <li>
@@ -169,6 +178,106 @@ const Navbar = () => {
           {menuOpen ? <X size={30} /> : <Menu size={30} />}
         </button>
       </div>
+
+      {/* ✅ Mobile Dropdown Menu */}
+      {menuOpen && (
+        <div className="lg:hidden bg-black border-t border-gray-800">
+          <ul className="flex flex-col text-lg font-semibold px-6 py-4 space-y-3">
+            {navItemsLeft.map((item, index) => (
+              <li key={index}>
+                {item.hasDropdown ? (
+                  <>
+                    <button
+                      onClick={() => setEventsDropdown(!eventsDropdown)}
+                      className="w-full flex justify-between items-center text-left"
+                    >
+                      {item.name}
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform ${
+                          eventsDropdown ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {eventsDropdown && (
+                      <ul className="ml-4 mt-2 space-y-2 text-base">
+                        <li>
+                          <Link
+                            to="/events/competitions"
+                            className="block hover:text-purple-400"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            Competitions
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/events/concerts"
+                            className="block hover:text-purple-400"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            Concerts
+                          </Link>
+                        </li>
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={() => setMenuOpen(false)}
+                    className="hover:text-purple-400"
+                  >
+                    {item.name}
+                  </Link>
+                )}
+              </li>
+            ))}
+
+            <hr className="border-gray-800 my-2" />
+
+            {/* Account Section (Mobile) */}
+            {user ? (
+              <>
+                <Link
+                  to="/account"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-purple-400"
+                >
+                  My Account
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="text-left hover:text-purple-400"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="hover:text-purple-400"
+              >
+                Login
+              </Link>
+            )}
+
+            <Link
+              to="/tickets"
+              onClick={() => setMenuOpen(false)}
+              className="btn-gradient px-5 py-2 mt-3 text-center flex items-center justify-center space-x-2"
+            >
+              <span>Buy Ticket</span>
+              <ArrowRight size={18} />
+            </Link>
+          </ul>
+        </div>
+      )}
     </nav>
   );
 };

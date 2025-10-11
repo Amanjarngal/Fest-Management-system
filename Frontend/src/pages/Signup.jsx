@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
-// import { toast } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -23,26 +24,35 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      // Create user
+      // 🔹 Create user in Firebase
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      // Add display name
-      await updateProfile(userCredential.user, {
+      const user = userCredential.user;
+
+      // 🔹 Add display name in Firebase
+      await updateProfile(user, {
         displayName: formData.name,
       });
 
-      // ✅ Immediately sign out after signup
+      // 🔹 Send user data to backend (MongoDB)
+      await axios.post("http://localhost:5000/api/users/register", {
+        uid: user.uid,
+        name: formData.name,
+        email: formData.email,
+      });
+
+      // 🔹 Immediately sign out after signup
       await signOut(auth);
 
       toast.success("Account created successfully! Please login to continue.");
       navigate("/login");
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Something went wrong!");
+      toast.error(error.response?.data?.message || error.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -62,7 +72,6 @@ const Signup = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name */}
           <div>
             <label className="block text-sm font-semibold mb-2">Full Name</label>
             <input
@@ -75,7 +84,6 @@ const Signup = () => {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-sm font-semibold mb-2">Email Address</label>
             <input
@@ -88,7 +96,6 @@ const Signup = () => {
             />
           </div>
 
-          {/* Password */}
           <div className="relative">
             <label className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -109,7 +116,6 @@ const Signup = () => {
             </button>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -126,7 +132,6 @@ const Signup = () => {
           </button>
         </form>
 
-        {/* Footer */}
         <p className="text-gray-400 text-center mt-6">
           Already have an account?{" "}
           <Link to="/login" className="text-purple-400 hover:underline font-medium">
