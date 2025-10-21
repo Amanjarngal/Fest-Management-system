@@ -13,7 +13,9 @@ const DashboardLayout = () => {
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Users", path: "/dashboard/users", icon: <Users size={20} /> },
-    { name: "Images", path: "/dashboard/images", icon: <Users size={20} /> }
+    { name: "Make Admin", path: "/dashboard/make-admin", icon: <Users size={20} /> },
+    { name: "Images", path: "/dashboard/images", icon: <Users size={20} /> },
+    { name: "Voting Zone", path: "/dashboard/voting-zone", icon: <Users size={20} /> },
   ];
 
   return (

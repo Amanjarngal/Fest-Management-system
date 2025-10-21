@@ -14,6 +14,8 @@ import UsersPage from "./pages/Dashboard/UsersPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import AdminRoute from "./components/AdminRoute";
 import ImagesPage from "./pages/Dashboard/ImagesPage";
+import MakeAdmin from "./pages/Dashboard/MakeAdmin";
+import VotingZoneDashboard from "./pages/Dashboard/VotingZoneDashboard";
 
 function App() {
   return (
@@ -41,7 +43,9 @@ function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="make-admin" element={<MakeAdmin />} />
         <Route path="images" element={<ImagesPage />} />
+        <Route path="voting-zone" element={<VotingZoneDashboard />} />
         {/* <Route path="services" element={<ServicesPage />} /> */}
       </Route>
       </Routes>

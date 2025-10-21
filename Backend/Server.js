@@ -1,13 +1,37 @@
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import app from "./app.js";
+import http from "http";
+import { Server } from "socket.io";
 
-// Load environment variables
 dotenv.config();
 
 // ✅ Connect MongoDB
 connectDB();
 
+// ✅ Create HTTP server from Express app
+const server = http.createServer(app);
+
+// ✅ Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: "*", // your frontend origin  
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+});
+
+// ✅ Store io instance in app (so controllers can access it)
+app.set("io", io);
+
+// ✅ Socket event listeners
+io.on("connection", (socket) => {
+  console.log("🟢 A user connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("🔴 A user disconnected:", socket.id);
+  });
+});
+
 // ✅ Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
