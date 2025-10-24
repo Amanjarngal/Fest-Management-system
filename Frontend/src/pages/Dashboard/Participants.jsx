@@ -11,7 +11,7 @@
 
   const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
-  const VotingZoneDashboard = () => {
+  const Participants = () => {
     const [participants, setParticipants] = useState([]);
     const [formData, setFormData] = useState({
       name: "",
@@ -291,4 +291,4 @@ const handleEdit = (participant) => {
     );
   };
 
-  export default VotingZoneDashboard;
+  export default Participants;
