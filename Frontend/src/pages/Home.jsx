@@ -1,11 +1,12 @@
 import React from 'react'
+import HeroSection from '../components/HomeComponents/HeroSection'
+import FeaturesSection from '../components/HomeComponents/FeaturesSection'
 
 const Home = () => {
   return (
     <div>
-       <h1 class="text-3xl font-bold underline">
-    Hello world!
-  </h1>
+      <HeroSection />
+      <FeaturesSection />
     </div>
   )
 }

@@ -9,11 +9,10 @@ const Leaderboard = () => {
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch top 3 participants
+  // ✅ Fetch top 3 participants
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-
       const res = await axios.get(`${BACKEND_URI}/api/leaderboard`);
       setParticipants(res.data.top3 || []);
       setIsLive(true);
@@ -39,19 +38,8 @@ const Leaderboard = () => {
       </div>
     );
 
-if (!isLive)
-  return (
-    <div className="text-white text-center py-10">
-      <h2 className="text-2xl font-semibold mb-2">Results Coming Soon!</h2>
-      <p className="text-gray-300">
-        The leaderboard will be revealed once voting ends. 🕓
-      </p>
-      <p className="mt-4 text-gray-400">
-        Stay tuned to see who the top performers are! 🏆
-      </p>
-    </div>
-  );
-
+  // ✅ If not live, show nothing
+  if (!isLive) return null;
 
   const medals = ["🥇", "🥈", "🥉"];
   const colors = [

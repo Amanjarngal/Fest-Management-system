@@ -36,7 +36,7 @@ const ImageSection = () => {
   ];
 
   return (
-    <section className="min-h-screen bg-[#0b0b12] text-white py-16 px-6">
+    <section className="min-h-screen bg-[#000000] text-white py-16 px-6">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-5xl font-extrabold mb-12 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">
          Moments of Magic

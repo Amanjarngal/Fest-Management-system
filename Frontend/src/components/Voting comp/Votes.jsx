@@ -99,6 +99,8 @@ const Votes = () => {
   return (
     <> 
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-purple-950 text-white p-6">
+        {/* Leaderboard Section */}
+      <Leaderboard participants={sortedParticipants.slice(0, 3)} />
       <h1 className="text-4xl font-bold mb-10 text-center">
         Vote for Your Favorite ✨
       </h1>
@@ -111,10 +113,12 @@ const Votes = () => {
           participants.map((p) => {
             const hasVoted = votedIds.includes(p._id);
             return (
+              
               <div
                 key={p._id}
                 className="bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 text-center shadow-lg hover:shadow-purple-500/30 hover:-translate-y-2 transition-all duration-300"
               >
+                
                 <div className="relative mb-4">
                   <img
                     src={p.photoUrl || "https://via.placeholder.com/150"}
@@ -158,11 +162,8 @@ const Votes = () => {
         )}
        
       </div> 
-       {/* Leaderboard Section */}
-      <Leaderboard participants={sortedParticipants.slice(0, 3)} />
+     
     </div>
-   
-      
       </>
   );
 };
