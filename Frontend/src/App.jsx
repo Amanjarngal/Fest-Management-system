@@ -17,6 +17,10 @@ import ImagesPage from "./pages/Dashboard/ImagesPage";
 import MakeAdmin from "./pages/Dashboard/MakeAdmin";
 import DashboardLeaderboard from "./pages/Dashboard/DashboardLeaderboard";
 import Participants from "./pages/Dashboard/Participants";
+import EventsDashboard from "./pages/Dashboard/EventsDashboard";
+import EventSchedule from "./pages/EventSchedule";
+import PricingDashboard from "./pages/Dashboard/PricingDashboard";
+import PricingPage from "./pages/PricingSection";
 
 function App() {
   return (
@@ -32,8 +36,13 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path='/signup' element={<Signup />} />
         <Route path='/gallery' element={<Gallery />} />
+        <Route path='/eventSchedules' element={<EventSchedule />} />
+        <Route path='/pricing' element={<PricingPage />} />
+
         <Route path='*' element={<div>404 Not Found</div>} />
 
+
+        {/* Admin Routes */}
         <Route
         path="/dashboard"
         element={
@@ -48,6 +57,8 @@ function App() {
         <Route path="images" element={<ImagesPage />} />
         <Route path="participants" element={<Participants />} />
         <Route path="leaderboard" element={<DashboardLeaderboard />} />
+        <Route path="events" element={<EventsDashboard />} />
+        <Route path="pricingSet" element={<PricingDashboard />} />
         {/* <Route path="services" element={<ServicesPage />} /> */}
       </Route>
       </Routes>

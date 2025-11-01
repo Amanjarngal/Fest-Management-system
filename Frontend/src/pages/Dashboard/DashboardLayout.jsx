@@ -17,16 +17,24 @@ const DashboardLayout = () => {
     { name: "Images", path: "/dashboard/images", icon: <Users size={20} /> },
     { name: "Participants Management", path: "/dashboard/participants", icon: <Users size={20} /> },
     { name: "Leaderboard", path: "/dashboard/leaderboard", icon: <Users size={20} /> },
+    { name: "Events", path: "/dashboard/events", icon: <Users size={20} /> },
+    { name: "PricingSet", path: "/dashboard/pricingSet", icon: <Users size={20} /> },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
+    <div className="min-h-screen grid md:grid-cols-[16rem_1fr] bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
+
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 transform ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } transition-transform duration-300 ease-in-out bg-gray-950 md:w-64 w-64 border-r border-gray-800 flex flex-col`}
-      >
+  className={`${
+    isOpen
+      ? "translate-x-0"
+      : "-translate-x-full md:translate-x-0"
+  } transform transition-transform duration-300 ease-in-out 
+  bg-gray-950 border-r border-gray-800 md:w-64 w-64 flex flex-col 
+  md:sticky md:top-0 md:h-screen z-40`}
+>
+
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <h2 className="text-lg font-bold tracking-wide">Admin Panel</h2>

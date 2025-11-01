@@ -7,7 +7,6 @@ import {
   Megaphone,
   User,
   KeyRound,
-  ChevronDown,
   LogOut,
 } from "lucide-react";
 import { auth } from "../firebase";
@@ -15,12 +14,11 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [eventsDropdown, setEventsDropdown] = useState(false);
   const [accountDropdown, setAccountDropdown] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Check login state
+  // ✅ Check login state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -38,9 +36,10 @@ const Navbar = () => {
     }
   };
 
+  // ✅ Simplified nav items (no dropdown)
   const navItemsLeft = [
     { name: "About", path: "/" },
-    { name: "Events", hasDropdown: true },
+    { name: "Events", path: "/eventSchedules" },
     { name: "Gallery", path: "/gallery" },
     { name: "Voting Zone", path: "/voting" },
     {
@@ -60,46 +59,18 @@ const Navbar = () => {
           <h1 className="text-3xl font-bold tracking-wide">FestoMania</h1>
         </Link>
 
-        {/* Desktop Menu */}
+        {/* ✅ Desktop Menu */}
         <div className="hidden lg:flex items-center space-x-10">
           <ul className="flex items-center space-x-8 font-semibold text-xl">
             {navItemsLeft.map((item, index) => (
-              <li key={index} className="relative">
-                <div
-                  onMouseEnter={() => item.hasDropdown && setEventsDropdown(true)}
-                  onMouseLeave={() => item.hasDropdown && setEventsDropdown(false)}
+              <li key={index}>
+                <Link
+                  to={item.path}
+                  className="hover:text-purple-400 transition-colors duration-200 flex items-center"
                 >
-                  <Link
-                    to={item.path || "#"}
-                    className="hover:text-purple-400 transition-colors duration-200 flex items-center"
-                  >
-                    {item.name}
-                    {item.icon && item.icon}
-                    {item.hasDropdown && <ChevronDown size={16} className="ml-1" />}
-                  </Link>
-
-                  {/* Dropdown for Events */}
-                  {item.hasDropdown && eventsDropdown && (
-                    <ul className="absolute top-full left-0 bg-black border border-gray-800 rounded shadow-lg w-48 z-50">
-                      <li>
-                        <Link
-                          to="/events/competitions"
-                          className="block px-4 py-2 hover:bg-purple-900 transition-colors duration-200"
-                        >
-                          Competitions
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/events/concerts"
-                          className="block px-4 py-2 hover:bg-purple-900 transition-colors duration-200"
-                        >
-                          Concerts
-                        </Link>
-                      </li>
-                    </ul>
-                  )}
-                </div>
+                  {item.name}
+                  {item.icon && item.icon}
+                </Link>
               </li>
             ))}
           </ul>
@@ -185,53 +156,13 @@ const Navbar = () => {
           <ul className="flex flex-col text-lg font-semibold px-6 py-4 space-y-3">
             {navItemsLeft.map((item, index) => (
               <li key={index}>
-                {item.hasDropdown ? (
-                  <>
-                    <button
-                      onClick={() => setEventsDropdown(!eventsDropdown)}
-                      className="w-full flex justify-between items-center text-left"
-                    >
-                      {item.name}
-                      <ChevronDown
-                        size={18}
-                        className={`transition-transform ${
-                          eventsDropdown ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {eventsDropdown && (
-                      <ul className="ml-4 mt-2 space-y-2 text-base">
-                        <li>
-                          <Link
-                            to="/events/competitions"
-                            className="block hover:text-purple-400"
-                            onClick={() => setMenuOpen(false)}
-                          >
-                            Competitions
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/events/concerts"
-                            className="block hover:text-purple-400"
-                            onClick={() => setMenuOpen(false)}
-                          >
-                            Concerts
-                          </Link>
-                        </li>
-                      </ul>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    to={item.path}
-                    onClick={() => setMenuOpen(false)}
-                    className="hover:text-purple-400"
-                  >
-                    {item.name}
-                  </Link>
-                )}
+                <Link
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-purple-400"
+                >
+                  {item.name}
+                </Link>
               </li>
             ))}
 
