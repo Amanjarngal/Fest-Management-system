@@ -79,3 +79,14 @@ export const editEvent = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// 📄 Get single event by ID
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    res.status(200).json(event);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

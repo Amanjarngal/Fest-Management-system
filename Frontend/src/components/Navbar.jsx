@@ -8,6 +8,7 @@ import {
   User,
   KeyRound,
   LogOut,
+  ShoppingCart,
 } from "lucide-react";
 import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -36,17 +37,12 @@ const Navbar = () => {
     }
   };
 
-  // ✅ Simplified nav items (no dropdown)
   const navItemsLeft = [
     { name: "About", path: "/" },
     { name: "Events", path: "/eventSchedules" },
     { name: "Gallery", path: "/gallery" },
     { name: "Voting Zone", path: "/voting" },
-    {
-      name: "Gate Pass",
-      path: "/gatepass",
-      icon: <KeyRound size={20} className="inline ml-2 text-purple-400" />,
-    },
+    { name: "Gate Pass", path: "/gatepass" },
     { name: "Contact Us", path: "/contact" },
   ];
 
@@ -69,7 +65,6 @@ const Navbar = () => {
                   className="hover:text-purple-400 transition-colors duration-200 flex items-center"
                 >
                   {item.name}
-                  {item.icon && item.icon}
                 </Link>
               </li>
             ))}
@@ -84,6 +79,14 @@ const Navbar = () => {
             >
               <Megaphone size={25} className="text-purple-400" />
             </Link>
+
+            {/* 🛒 Cart Icon */}
+            <button
+              onClick={() => navigate("/cart")}
+              className="hover:text-purple-400 transition-colors duration-200"
+            >
+              <ShoppingCart size={25} className="text-purple-400" />
+            </button>
 
             {/* Account Dropdown */}
             <div
@@ -130,14 +133,14 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Buy Ticket Button */}
-            <Link
-              to="/tickets"
+            {/* Buy Ticket Button → redirect to eventSchedules */}
+            <button
+              onClick={() => navigate("/eventSchedules")}
               className="btn-gradient px-7 py-3 text-base flex items-center space-x-2"
             >
               <span>Buy Ticket</span>
               <ArrowRight size={20} />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -198,14 +201,16 @@ const Navbar = () => {
               </Link>
             )}
 
-            <Link
-              to="/tickets"
-              onClick={() => setMenuOpen(false)}
+            <button
+              onClick={() => {
+                navigate("/eventSchedules");
+                setMenuOpen(false);
+              }}
               className="btn-gradient px-5 py-2 mt-3 text-center flex items-center justify-center space-x-2"
             >
               <span>Buy Ticket</span>
               <ArrowRight size={18} />
-            </Link>
+            </button>
           </ul>
         </div>
       )}

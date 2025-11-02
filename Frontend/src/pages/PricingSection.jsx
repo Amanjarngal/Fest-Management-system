@@ -1,44 +1,95 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Check, Star, Diamond, Medal, Percent } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Star,
+  Diamond,
+  Medal,
+  Ticket,
+  Percent,
+  Check,
+} from "lucide-react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
 const PricingSection = () => {
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState("");
+  const { user } = useAuth();
+  const { eventId } = useParams();
+  const navigate = useNavigate();
+  const [eventDetails, setEventDetails] = useState(null);
   const [tiers, setTiers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // 🎟️ Fetch all events on load
   useEffect(() => {
-    axios
-      .get(`${BACKEND_URI}/api/events`)
-      .then((res) => setEvents(res.data))
-      .catch((err) => console.error("Error fetching events:", err));
+    AOS.init({ duration: 1000, once: true });
   }, []);
 
-  // 💰 Fetch pricing tiers for selected event
+  // 🧩 Fetch Event + Pricing
   useEffect(() => {
-    if (!selectedEvent) return;
-    setLoading(true);
-    axios
-      .get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`)
-      .then((res) => {
-        setTiers(res.data);
+    if (!eventId) return;
+    const fetchEventData = async () => {
+      try {
+        const [eventRes, pricingRes] = await Promise.all([
+          axios.get(`${BACKEND_URI}/api/events/${eventId}`),
+          axios.get(`${BACKEND_URI}/api/pricing/event/${eventId}`),
+        ]);
+        setEventDetails(eventRes.data);
+        setTiers(pricingRes.data);
+      } catch (error) {
+        console.error("Error fetching event pricing:", error);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching pricing:", err);
-        setLoading(false);
-      });
-  }, [selectedEvent]);
+      }
+    };
+    fetchEventData();
+  }, [eventId]);
 
-  // Icons and gradient color based on ticket type
+  // 🛒 Add to Cart Handler
+// 🛒 Add to Cart Handler
+const handlePurchase = async (tier) => {
+  try {
+    if (!user) {
+      alert("Please log in to continue!");
+      navigate("/login");
+      return;
+    }
+
+    const uid = user.uid; // ✅ Backend expects 'uid', not 'firebaseUid'
+    const token = await user.getIdToken();
+
+    const cartItem = {
+      uid, // ✅ fixed here
+      eventId,
+      pricingId: tier._id,
+      quantity: 1,
+    };
+
+    const res = await axios.post(`${BACKEND_URI}/api/cart/add`, cartItem, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      alert(`${tier.ticketType} Ticket added to cart successfully!`);
+      navigate("/cart");
+    }
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    alert("Failed to add ticket to cart. Please try again.");
+  }
+};
+
+
+  // 🎨 Tier Icons & Colors
   const tierIcons = {
-    GOLDEN: <Diamond size={28} className="text-yellow-300" />,
-    SILVER: <Star size={28} className="text-gray-300" />,
-    BRONZE: <Medal size={28} className="text-orange-300" />,
+    GOLDEN: <Diamond size={30} className="text-yellow-300 drop-shadow-glow" />,
+    SILVER: <Star size={30} className="text-gray-300" />,
+    BRONZE: <Medal size={30} className="text-orange-400" />,
   };
 
   const tierColors = {
@@ -47,127 +98,127 @@ const PricingSection = () => {
     BRONZE: "from-orange-500 via-orange-600 to-red-600",
   };
 
+  // 🧩 Facilities by Tier
+  const tierBenefits = {
+    GOLDEN: [
+      "Access to all main stage events",
+      "VIP lounge + backstage entry",
+      "Free premium refreshments & meals",
+      "Front-row seating for shows",
+      "Exclusive meet & greet with performers",
+      "Priority entry line + early access",
+      "Complimentary fest merchandise kit",
+    ],
+    SILVER: [
+      "Access to all main stage events",
+      "Free refreshments",
+      "Preferred seating zone",
+      "Discount on merchandise purchases",
+    ],
+    BRONZE: [
+      "Access to general fest area",
+      "Free entry to selected events",
+      "Basic refreshments available for purchase",
+    ],
+  };
+
   return (
-    <section className="bg-gray-950 text-white py-20 px-6">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h2 className="text-4xl font-bold text-yellow-400 mb-3">
-          🎫 Event Ticket Pricing
-        </h2>
-        <p className="text-gray-400 text-lg">
-          Select an event to explore available ticket tiers and offers.
-        </p>
-      </div>
-
-      {/* Event Selector */}
-      <div className="flex justify-center mb-12">
-        <select
-          value={selectedEvent}
-          onChange={(e) => setSelectedEvent(e.target.value)}
-          className="p-3 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 w-full md:w-1/3 text-center"
-        >
-          <option value="">-- Choose an Event --</option>
-          {events.map((e) => (
-            <option key={e._id} value={e._id}>
-              {e.title} ({e.date})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Pricing Cards */}
+    <section className="bg-gradient-to-b from-black via-gray-900 to-gray-950 text-white py-20 px-6 min-h-screen">
       {loading ? (
-        <p className="text-center text-gray-400 text-lg">Loading tiers...</p>
-      ) : tiers.length === 0 ? (
-        <p className="text-center text-gray-500 text-lg">
-          No pricing available for this event yet.
+        <p className="text-center text-gray-400 text-lg animate-pulse">
+          Loading event details...
         </p>
       ) : (
-        <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          {tiers.map((tier, i) => (
-            <div
-              key={i}
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-b ${
-                tierColors[tier.ticketType] || "from-gray-700 to-gray-900"
-              } shadow-xl p-[2px] transition-transform hover:scale-105`}
-            >
-              <div className="bg-gray-900 rounded-2xl p-8 h-full flex flex-col justify-between border border-gray-800">
-                {/* Ticket Top Shape */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-5 bg-gray-900 rounded-b-full shadow-md" />
+        <>
+          {/* 🎟️ Event Header */}
+          <div className="max-w-4xl mx-auto text-center mb-14" data-aos="fade-up">
+            <h2 className="text-5xl font-extrabold mb-3">
+              Ticket Pricing for{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
+                {eventDetails?.title}
+              </span>
+            </h2>
+            <div className="flex justify-center flex-wrap gap-5 mt-6 text-gray-300">
+              <p className="flex items-center gap-2">
+                <Calendar size={18} className="text-pink-400" />{" "}
+                {eventDetails?.date}
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin size={18} className="text-blue-400" />{" "}
+                {eventDetails?.location}
+              </p>
+              {eventDetails?.time && (
+                <p className="flex items-center gap-2">
+                  <Clock size={18} className="text-green-400" />{" "}
+                  {eventDetails?.time}
+                </p>
+              )}
+            </div>
+            {eventDetails?.description && (
+              <p className="text-gray-400 mt-5 max-w-2xl mx-auto leading-relaxed">
+                {eventDetails.description}
+              </p>
+            )}
+          </div>
 
-                {/* Header */}
-                <div className="text-center mb-6">
-                  <div className="flex justify-center mb-3">
-                    {tierIcons[tier.ticketType]}
-                  </div>
-                  <h3 className="text-2xl font-semibold">
-                    {tier.ticketType} Ticket
-                  </h3>
+          {/* 🪙 Pricing Tiers */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
+            {tiers.map((tier, index) => (
+              <div
+                key={tier._id}
+                data-aos="fade-up"
+                data-aos-delay={index * 150}
+                className={`rounded-2xl bg-gradient-to-b ${tierColors[tier.ticketType]} p-[2px] shadow-lg hover:scale-105 transition-transform duration-300`}
+              >
+                <div className="bg-gray-950 rounded-2xl p-8 flex flex-col justify-between h-full border border-gray-800">
+                  <div className="text-center space-y-3">
+                    <div className="flex justify-center mb-2">
+                      {tierIcons[tier.ticketType]}
+                    </div>
+                    <h3 className="text-2xl font-semibold tracking-wide uppercase">
+                      {tier.ticketType} Pass
+                    </h3>
 
-                  {/* Price Section */}
-                  <div className="mt-2">
                     {tier.offer?.active ? (
                       <>
-                        <p className="text-3xl font-extrabold text-green-400">
-                          ₹{tier.finalPrice}
-                          <span className="text-gray-400 text-sm font-medium">
-                            {" "}
-                            /pass
-                          </span>
+                        <p className="text-3xl font-bold text-green-400">
+                          ₹{tier.finalPrice.toLocaleString()}
                         </p>
-                        <p className="text-sm text-yellow-400 flex items-center justify-center gap-1">
+                        <p className="text-sm text-yellow-400 flex justify-center items-center gap-1">
                           <Percent size={14} /> {tier.offer.percentage}% off till{" "}
                           {new Date(tier.offer.expiry).toLocaleDateString()}
                         </p>
                         <p className="line-through text-gray-500 text-sm">
-                          ₹{tier.price}
+                          ₹{tier.price.toLocaleString()}
                         </p>
                       </>
                     ) : (
-                      <p className="text-4xl font-extrabold mt-2 text-yellow-400">
-                        ₹{tier.price}
-                        <span className="text-gray-400 text-base font-medium">
-                          {" "}
-                          /pass
-                        </span>
+                      <p className="text-4xl font-extrabold mt-2 text-pink-400">
+                        ₹{tier.price.toLocaleString()}
                       </p>
                     )}
                   </div>
+
+                  <ul className="mt-5 text-sm text-gray-400 space-y-2">
+                    {tierBenefits[tier.ticketType].map((benefit, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <Check size={16} className="text-pink-400" /> {benefit}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => handlePurchase(tier)}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-full mt-8 hover:scale-105 transition-all shadow-lg"
+                  >
+                    <Ticket className="inline-block mr-2" size={18} /> Purchase
+                    Now
+                  </button>
                 </div>
-
-                {/* Features */}
-                <ul className="space-y-3 mb-8 text-gray-300 text-sm">
-                  <li className="flex items-center gap-3">
-                    <Check size={16} className="text-yellow-400" /> Tickets
-                    Available: {tier.totalTickets - tier.ticketsSold}
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check size={16} className="text-yellow-400" /> Event Access
-                    Included
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check size={16} className="text-yellow-400" /> Valid for
-                    one person
-                  </li>
-                </ul>
-
-                {/* Button */}
-                <button
-                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-semibold py-3 px-6 rounded-lg transition-all mt-auto"
-                  onClick={() =>
-                    alert(`Proceed to purchase ${tier.ticketType} Ticket`)
-                  }
-                >
-                  Purchase Now →
-                </button>
               </div>
-
-              {/* Ticket Cut Dots */}
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-950 rounded-full border border-gray-700" />
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-950 rounded-full border border-gray-700" />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </section>
   );

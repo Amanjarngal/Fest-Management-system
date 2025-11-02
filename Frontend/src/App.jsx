@@ -21,6 +21,7 @@ import EventsDashboard from "./pages/Dashboard/EventsDashboard";
 import EventSchedule from "./pages/EventSchedule";
 import PricingDashboard from "./pages/Dashboard/PricingDashboard";
 import PricingPage from "./pages/PricingSection";
+import CartPage from "./pages/CartPage";
 
 function App() {
   return (
@@ -37,7 +38,8 @@ function App() {
         <Route path='/signup' element={<Signup />} />
         <Route path='/gallery' element={<Gallery />} />
         <Route path='/eventSchedules' element={<EventSchedule />} />
-        <Route path='/pricing' element={<PricingPage />} />
+        <Route path='/pricing/:eventId' element={<PricingPage />} />
+        <Route path='/cart' element={<CartPage />} />
 
         <Route path='*' element={<div>404 Not Found</div>} />
 

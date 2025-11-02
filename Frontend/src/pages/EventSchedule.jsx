@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Calendar, MapPin, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -9,6 +10,7 @@ const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 const EventSchedule = () => {
   const [events, setEvents] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     AOS.init({ duration: 900, once: true, offset: 100 });
@@ -33,16 +35,16 @@ const EventSchedule = () => {
 
   return (
     <section className="bg-[#050512] text-white py-20 relative overflow-hidden">
-      {/* Subtle Glow Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-pink-900/10 blur-3xl"></div>
 
       {/* Header */}
       <div className="text-center mb-16 relative z-10">
-        <p className="text-pink-400 tracking-widest uppercase text-sm">
-          // Event Schedule
-        </p>
+        <p className="text-pink-400 tracking-widest uppercase text-sm">// Event Schedule</p>
         <h2 className="text-5xl md:text-6xl font-bold mt-3 leading-tight">
-          Follow Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">Event Schedule</span>
+          Follow Our{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
+            Event Schedule
+          </span>
         </h2>
       </div>
 
@@ -59,9 +61,7 @@ const EventSchedule = () => {
             }`}
           >
             <div className="flex flex-col items-center">
-              <span>
-                Day {i + 1}
-              </span>
+              <span>Day {i + 1}</span>
               <span
                 className={`text-sm ${
                   selectedDay === day ? "text-gray-200" : "text-gray-500"
@@ -80,7 +80,6 @@ const EventSchedule = () => {
 
       {/* Timeline */}
       <div className="relative max-w-6xl mx-auto px-4 md:px-6 z-10">
-        {/* Vertical Line */}
         <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-[3px] bg-gradient-to-b from-pink-500 via-purple-500 to-transparent opacity-60"></div>
 
         {groupedByDay[selectedDay]?.map((event, idx) => (
@@ -98,7 +97,6 @@ const EventSchedule = () => {
                 alt={event.title}
                 className="w-full h-72 md:h-80 object-cover transform transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             </div>
 
             {/* Connector Dot */}
@@ -131,19 +129,16 @@ const EventSchedule = () => {
                 </div>
               </div>
 
-              <button className="relative overflow-hidden bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full font-semibold tracking-wide transition-all duration-300 hover:scale-105 shadow-[0_0_20px_rgba(216,0,255,0.4)]">
-                <span className="relative z-10">Buy Ticket</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 hover:opacity-100 transition-opacity duration-500"></span>
+              {/* 🟡 Navigate to Pricing page with eventId */}
+              <button
+                onClick={() => navigate(`/pricing/${event._id}`)}
+                className="relative overflow-hidden bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full font-semibold tracking-wide transition-all duration-300 hover:scale-105 shadow-[0_0_20px_rgba(216,0,255,0.4)]"
+              >
+                Buy Ticket
               </button>
             </div>
           </div>
         ))}
-
-        {!groupedByDay[selectedDay]?.length && (
-          <p className="text-center text-gray-400 text-lg mt-10">
-            No events available for this day.
-          </p>
-        )}
       </div>
     </section>
   );

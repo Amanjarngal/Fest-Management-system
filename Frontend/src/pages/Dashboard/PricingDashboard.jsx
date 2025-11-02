@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Percent, Tag, Trash2, X } from "lucide-react";
+import { Percent, Tag, Trash2, X, Edit } from "lucide-react";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
-// 🎁 Offer Modal Component
 const OfferModal = ({ isOpen, onClose, onSubmit }) => {
   const [offerPercentage, setOfferPercentage] = useState("");
   const [expiryDays, setExpiryDays] = useState(7);
@@ -83,11 +82,14 @@ const PricingDashboard = () => {
   ]);
   const [existingPricings, setExistingPricings] = useState([]);
 
-  // Offer modal control
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [selectedPricingId, setSelectedPricingId] = useState(null);
 
-  // ✅ Fetch events
+  // ✅ Edit Mode
+  const [editMode, setEditMode] = useState(null);
+  const [editData, setEditData] = useState({ price: "", totalTickets: "" });
+
+  // Fetch events
   useEffect(() => {
     axios
       .get(`${BACKEND_URI}/api/events`)
@@ -95,7 +97,7 @@ const PricingDashboard = () => {
       .catch((err) => console.error(err));
   }, []);
 
-  // ✅ Fetch pricing for selected event
+  // Fetch pricing for selected event
   useEffect(() => {
     if (selectedEvent) {
       axios
@@ -105,14 +107,12 @@ const PricingDashboard = () => {
     }
   }, [selectedEvent]);
 
-  // ✅ Handle input change for tiers
   const handleTierChange = (index, field, value) => {
     const updatedTiers = [...tiers];
     updatedTiers[index][field] = value;
     setTiers(updatedTiers);
   };
 
-  // ✅ Submit new tier pricing
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -126,29 +126,37 @@ const PricingDashboard = () => {
         { ticketType: "SILVER", price: "", totalTickets: "" },
         { ticketType: "BRONZE", price: "", totalTickets: "" },
       ]);
-      axios
-        .get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`)
-        .then((res) => setExistingPricings(res.data));
+      const res = await axios.get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`);
+      setExistingPricings(res.data);
     } catch (err) {
       alert(err.response?.data?.error || "Error creating pricing");
     }
   };
 
-  // ✅ Apply offer logic
   const handleApplyOffer = async (percentage, days) => {
     if (!selectedPricingId) return;
-
     try {
       await axios.put(`${BACKEND_URI}/api/pricing/offer/${selectedPricingId}`, {
         offerPercentage: percentage,
         offerExpiry: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
       });
       alert("✅ Offer applied!");
-      axios
-        .get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`)
-        .then((res) => setExistingPricings(res.data));
+      const res = await axios.get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`);
+      setExistingPricings(res.data);
     } catch (err) {
       alert("Error applying offer");
+    }
+  };
+
+  const handleEditSave = async (pricingId) => {
+    try {
+      await axios.put(`${BACKEND_URI}/api/pricing/update/${pricingId}`, editData);
+      alert("✅ Pricing updated!");
+      setEditMode(null);
+      const res = await axios.get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`);
+      setExistingPricings(res.data);
+    } catch (err) {
+      alert("Error updating pricing");
     }
   };
 
@@ -220,42 +228,77 @@ const PricingDashboard = () => {
               key={p._id}
               className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl hover:shadow-yellow-500/20 transition-all relative"
             >
-              <h3 className="text-lg font-bold mb-2 text-yellow-400">
-                {p.ticketType}
-              </h3>
-              <p>💰 Price: ₹{p.finalPrice}</p>
-              <p>🎫 Available: {p.totalTickets - p.ticketsSold}</p>
-              {p.offer?.active && (
-                <p className="text-green-400 mt-2">
-                  🔥 {p.offer.percentage}% off until{" "}
-                  {new Date(p.offer.expiry).toLocaleDateString()}
-                </p>
-              )}
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => {
-                    setSelectedPricingId(p._id);
-                    setShowOfferModal(true);
-                  }}
-                  className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <Percent size={16} /> Apply Offer
-                </button>
-                <button
-                  onClick={() =>
-                    axios
-                      .delete(`${BACKEND_URI}/api/pricing/offer/${p._id}`)
-                      .then(() =>
+              <h3 className="text-lg font-bold mb-2 text-yellow-400">{p.ticketType}</h3>
+
+              {editMode === p._id ? (
+                <div className="space-y-3">
+                  <input
+                    type="number"
+                    value={editData.price}
+                    onChange={(e) => setEditData({ ...editData, price: e.target.value })}
+                    placeholder="New Price"
+                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  />
+                  <input
+                    type="number"
+                    value={editData.totalTickets}
+                    onChange={(e) => setEditData({ ...editData, totalTickets: e.target.value })}
+                    placeholder="New Total Tickets"
+                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  />
+                  <button
+                    onClick={() => handleEditSave(p._id)}
+                    className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg w-full"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p>💰 Price: ₹{p.finalPrice}</p>
+                  <p>🎫 Available: {p.totalTickets - p.ticketsSold}</p>
+                  {p.offer?.active && (
+                    <p className="text-green-400 mt-2">
+                      🔥 {p.offer.percentage}% off until{" "}
+                      {new Date(p.offer.expiry).toLocaleDateString()}
+                    </p>
+                  )}
+                  <div className="flex gap-3 mt-4 flex-wrap">
+                    <button
+                      onClick={() => {
+                        setSelectedPricingId(p._id);
+                        setShowOfferModal(true);
+                      }}
+                      className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg flex items-center gap-2"
+                    >
+                      <Percent size={16} /> Offer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditMode(p._id);
+                        setEditData({ price: p.price, totalTickets: p.totalTickets });
+                      }}
+                      className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2"
+                    >
+                      <Edit size={16} /> Edit
+                    </button>
+                    <button
+                      onClick={() =>
                         axios
-                          .get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`)
-                          .then((res) => setExistingPricings(res.data))
-                      )
-                  }
-                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <Trash2 size={16} /> Remove Offer
-                </button>
-              </div>
+                          .delete(`${BACKEND_URI}/api/pricing/offer/${p._id}`)
+                          .then(() =>
+                            axios
+                              .get(`${BACKEND_URI}/api/pricing/event/${selectedEvent}`)
+                              .then((res) => setExistingPricings(res.data))
+                          )
+                      }
+                      className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2"
+                    >
+                      <Trash2 size={16} /> Remove Offer
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
