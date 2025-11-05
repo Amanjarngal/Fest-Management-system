@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import './App.css'
-import Home from './pages/Home'
-import About from './pages/About'
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import './App.css';
+import Home from './pages/Home';
+import About from './pages/About';
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -22,17 +23,52 @@ import EventSchedule from "./pages/EventSchedule";
 import PricingDashboard from "./pages/Dashboard/PricingDashboard";
 import PricingPage from "./pages/PricingSection";
 import CartPage from "./pages/CartPage";
+import PerformerDashboard from "./pages/Dashboard/PerformerDashboard";
+import FeedbackDashboard from "./pages/Dashboard/FeedbackDashboard";
+import Footer from "./components/Footer";
+import NotFound from "./pages/NotFound";
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+
+  // ❌ Hide footer on these routes
+  const hideFooterRoutes = ["/login", "/signup"];
+  const isDashboard = location.pathname.startsWith("/dashboard");
+  const hideFooter = hideFooterRoutes.includes(location.pathname) || isDashboard;
+
   return (
-    <Router>
+    <>
+     {/* Toast Container */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: "#111",
+            color: "#fff",
+            border: "1px solid #333",
+          },
+          success: {
+            iconTheme: {
+              primary: "#ec4899", // pink
+              secondary: "#111",
+            },
+          },
+        }}
+      />
       <Navbar />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
+
         {/* protected routes */}
-        <Route path='/gatepass' element={<ProtectedRoute><GatePass /></ProtectedRoute>} />
-        <Route path="/voting"  element={ <ProtectedRoute> <VotingZone />  </ProtectedRoute>  }  />
+        <Route
+          path='/gatepass'
+          element={<ProtectedRoute><GatePass /></ProtectedRoute>}
+        />
+        <Route
+          path="/voting"
+          element={<ProtectedRoute><VotingZone /></ProtectedRoute>}
+        />
 
         <Route path='/login' element={<Login />} />
         <Route path='/signup' element={<Signup />} />
@@ -41,31 +77,42 @@ function App() {
         <Route path='/pricing/:eventId' element={<PricingPage />} />
         <Route path='/cart' element={<CartPage />} />
 
-        <Route path='*' element={<div>404 Not Found</div>} />
-
+        <Route path='*' element={ <NotFound /> } />
 
         {/* Admin Routes */}
         <Route
-        path="/dashboard"
-        element={
-          <AdminRoute>
-            <DashboardLayout />
-          </AdminRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="make-admin" element={<MakeAdmin />} />
-        <Route path="images" element={<ImagesPage />} />
-        <Route path="participants" element={<Participants />} />
-        <Route path="leaderboard" element={<DashboardLeaderboard />} />
-        <Route path="events" element={<EventsDashboard />} />
-        <Route path="pricingSet" element={<PricingDashboard />} />
-        {/* <Route path="services" element={<ServicesPage />} /> */}
-      </Route>
+          path="/dashboard"
+          element={
+            <AdminRoute>
+              <DashboardLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="make-admin" element={<MakeAdmin />} />
+          <Route path="images" element={<ImagesPage />} />
+          <Route path="participants" element={<Participants />} />
+          <Route path="leaderboard" element={<DashboardLeaderboard />} />
+          <Route path="events" element={<EventsDashboard />} />
+          <Route path="pricingSet" element={<PricingDashboard />} />
+          <Route path="performers" element={<PerformerDashboard />} />
+          <Route path="feedback" element={<FeedbackDashboard />} />
+        </Route>
       </Routes>
-    </Router>
-  )
+
+      {/* ✅ Conditionally render Footer */}
+      {!hideFooter && <Footer />}
+    </>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
+
+export default App;

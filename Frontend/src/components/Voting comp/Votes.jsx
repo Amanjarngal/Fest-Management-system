@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import Leaderboard from "./Leaderboard"; // Import the new component
+import toast from "react-hot-toast";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -70,9 +71,9 @@ const Votes = () => {
       });
 
       setVotedIds((prev) => [...prev, id]);
-      alert("✅ Vote submitted!");
+      toast.success("Vote submitted!", { duration: 2000 });
     } catch (err) {
-      alert(err.response?.data?.error || "Error voting");
+      toast.error(err.response?.data?.error || "❌ Something went wrong while voting.");
     }
   };
 

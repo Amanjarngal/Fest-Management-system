@@ -19,6 +19,8 @@ const DashboardLayout = () => {
     { name: "Leaderboard", path: "/dashboard/leaderboard", icon: <Users size={20} /> },
     { name: "Events", path: "/dashboard/events", icon: <Users size={20} /> },
     { name: "PricingSet", path: "/dashboard/pricingSet", icon: <Users size={20} /> },
+    { name: "Performers", path: "/dashboard/performers", icon: <Users size={20} /> },
+    { name: "Feedback", path: "/dashboard/feedback", icon: <Users size={20} /> },
   ];
 
   return (

@@ -6,6 +6,10 @@ import GallerySection from '../components/HomeComponents/GallerySection'
 import EventHeroSection from '../components/HomeComponents/EventHeroSection'
 import VotingIntroSection from '../components/HomeComponents/VotingIntroSection'
 import GatePassIntroSection from '../components/HomeComponents/GatePassIntroSection'
+import ConcertPerformers from '../components/HomeComponents/ConcertPerformers'
+import Sponsors from '../components/HomeComponents/Sponsors'
+import Testimonials from '../components/HomeComponents/Testimonials'
+import FeedbackForm from '../components/HomeComponents/FeedbackForm'
 
 const Home = () => {
   return (
@@ -14,9 +18,13 @@ const Home = () => {
       <FeaturesSection />
       <MagicBanner />
       <EventHeroSection />
+      <ConcertPerformers />
       <GallerySection/>
       <VotingIntroSection />
       <GatePassIntroSection />
+      <Sponsors />
+      <Testimonials />
+      <FeedbackForm />
     </div>
   )
 }
