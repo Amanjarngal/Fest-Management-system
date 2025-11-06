@@ -12,6 +12,7 @@ import cartRoutes from "./cart.Routes.js";
 import bookingRoutes from "./booking.Routes.js";
 import performerRoutes from "./performer.Routes.js";
 import feedbackRoutes from "./feedback.Routes.js";
+import announcementRoutes from "./announcement.routes.js"
 const router = express.Router();
 
 // ✅ All sub-routes
@@ -29,5 +30,6 @@ router.use("/cart", cartRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/performers", performerRoutes);
 router.use("/feedback", feedbackRoutes);
+router.use("/announcements", announcementRoutes);
 
 export default router;

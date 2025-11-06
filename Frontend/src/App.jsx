@@ -27,6 +27,7 @@ import PerformerDashboard from "./pages/Dashboard/PerformerDashboard";
 import FeedbackDashboard from "./pages/Dashboard/FeedbackDashboard";
 import Footer from "./components/Footer";
 import NotFound from "./pages/NotFound";
+import AnnouncementDashboard from "./pages/Dashboard/AnnouncementDashboard";
 
 function AppContent() {
   const location = useLocation();
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="pricingSet" element={<PricingDashboard />} />
           <Route path="performers" element={<PerformerDashboard />} />
           <Route path="feedback" element={<FeedbackDashboard />} />
+          <Route path="announcement" element={<AnnouncementDashboard />} />
         </Route>
       </Routes>
 

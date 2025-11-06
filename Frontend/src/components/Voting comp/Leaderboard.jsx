@@ -50,8 +50,8 @@ const Leaderboard = () => {
 
   return (
     <div className="text-center mb-10">
-      <h2 className="text-3xl font-bold mb-6 flex items-center justify-center gap-2">
-        <Crown className="text-yellow-400" /> Top Performers
+      <h2 className="text-3xl text-white font-bold mb-6 flex items-center justify-center gap-2">
+        <Crown className="text-amber-300" /> Top Performers
       </h2>
 
       <div className="flex flex-wrap justify-center gap-6">
@@ -69,7 +69,7 @@ const Leaderboard = () => {
                 alt={p.name}
                 className="w-20 h-20 mx-auto rounded-full border-4 border-yellow-300 mb-3 object-cover"
               />
-              <h3 className="font-semibold text-lg mb-1">{p.name}</h3>
+              <h3 className="font-semibold text-white text-lg mb-1">{p.name}</h3>
               <p className="text-yellow-300 font-bold">{p.votes || 0} Votes</p>
             </div>
           </div>

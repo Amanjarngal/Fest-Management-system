@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -14,6 +15,7 @@ const DashboardLeaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
+      toast.loading("Fetching leaderboard data...");
 
       // Get live status
       const statusRes = await axios.get(`${BACKEND_URI}/api/leaderboard/status`, {
@@ -21,15 +23,19 @@ const DashboardLeaderboard = () => {
       });
       setIsLive(statusRes.data.isLeaderboardLive || false);
 
-      // Fetch all leaderboard data (admin access)
+      // Fetch leaderboard data
       const leaderboardRes = await axios.get(`${BACKEND_URI}/api/leaderboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setTop3(leaderboardRes.data.top3 || []);
       setAllParticipants(leaderboardRes.data.allParticipants || []);
+      toast.dismiss();
+      // toast.success("Leaderboard updated successfully!");
     } catch (err) {
       console.error("❌ Error fetching leaderboard:", err);
+      toast.dismiss();
+      // toast.error("Failed to fetch leaderboard data.");
     } finally {
       setLoading(false);
     }
@@ -51,10 +57,14 @@ const DashboardLeaderboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert(res.data.message || "Leaderboard status updated successfully");
+      toast.success(
+        newLiveState
+          ? "Leaderboard is now LIVE! 🚀"
+          : "Leaderboard has been deactivated ❌"
+      );
     } catch (err) {
       console.error("Error toggling leaderboard:", err);
-      alert(err.response?.data?.error || "Error toggling leaderboard");
+      toast.error(err.response?.data?.error || "Error toggling leaderboard");
       setIsLive(!isLive); // revert on failure
     }
   };
@@ -63,13 +73,17 @@ const DashboardLeaderboard = () => {
     return (
       <div className="text-white text-center py-10">
         <p>Loading leaderboard...</p>
+        <Toaster position="top-right" reverseOrder={false} />
       </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 text-white">
+      {/* ✅ React Hot Toast Container */}
+      <Toaster position="top-right" reverseOrder={false} />
+
       {/* 🔧 Admin Controls */}
-      <div className="p-6 bg-gray-900 text-white rounded-xl shadow-lg mb-10 text-center">
+      <div className="p-6 bg-gray-900 rounded-xl shadow-lg mb-10 text-center">
         <h1 className="text-2xl font-bold mb-4">Leaderboard Control</h1>
         <p className="mb-4">
           Current Status:{" "}
@@ -92,7 +106,7 @@ const DashboardLeaderboard = () => {
       {/* 🏆 Top 3 Performers */}
       {top3.length > 0 && (
         <>
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">
+          <h2 className="text-3xl font-bold mb-6 text-center">
             🏆 Top 3 Participants
           </h2>
           <div className="flex justify-center gap-6 flex-wrap mb-12">
@@ -120,9 +134,7 @@ const DashboardLeaderboard = () => {
       )}
 
       {/* 👥 All Participants */}
-      <h2 className="text-2xl font-bold mb-6 text-white text-center">
-        All Participants
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">All Participants</h2>
       {allParticipants.length === 0 ? (
         <p className="text-gray-300 text-center">No participants found.</p>
       ) : (
@@ -137,7 +149,7 @@ const DashboardLeaderboard = () => {
                 alt={p.name}
                 className="w-20 h-20 mx-auto rounded-full border-2 border-purple-400 mb-2 object-cover"
               />
-              <h3 className="text-lg font-semibold text-white">{p.name}</h3>
+              <h3 className="text-lg font-semibold">{p.name}</h3>
               <p className="text-purple-300 font-bold">{p.votes} Votes</p>
             </div>
           ))}

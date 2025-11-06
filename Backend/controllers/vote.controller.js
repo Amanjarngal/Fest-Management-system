@@ -2,6 +2,8 @@
 const Vote = require("../models/Vote");
 const Participant = require("../models/Participant");
 const AppConfig = require("../models/AppConfig");
+// const Participant = require("../models/Participant");
+// const Vote = require("../models/Vote");
 
 // 🗳️ CAST VOTE
 async function castVote(req, res) {
@@ -34,6 +36,11 @@ async function castVote(req, res) {
       io.emit("voteUpdate", { id: participantId, votes: updated.votes });
       const top = await Participant.find().sort({ votes: -1 }).limit(5);
       io.emit("leaderboardUpdate", top);
+
+       // 🆕 Emit updated stats
+  const totalParticipants = await Participant.countDocuments();
+  const totalVotes = await Vote.countDocuments();
+  io.emit("statsUpdate", { totalParticipants, totalVotes });
     }
 
     res.json({
@@ -80,4 +87,20 @@ async function getUserVotes(req, res) {
   }
 }
 
-module.exports = { castVote, getVotes, getUserVotes };
+// 📊 Get total participants & votes
+async function getVotingStats(req, res) {
+  try {
+    const totalParticipants = await Participant.countDocuments();
+    const totalVotes = await Vote.countDocuments();
+
+    res.json({
+      message: "Stats fetched successfully ✅",
+      totalParticipants,
+      totalVotes,
+    });
+  } catch (err) {
+    console.error("Error fetching stats:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+module.exports = { castVote, getVotes, getUserVotes, getVotingStats };

@@ -56,8 +56,8 @@ const FeedbackDashboard = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-            💬 Manage Feedback
+          <h1 className="text-3xl md:text-4xl font-bold bg-white bg-clip-text text-transparent">
+             Manage Feedback
           </h1>
 
           <button

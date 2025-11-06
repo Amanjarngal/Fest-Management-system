@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ImageSection from "../components/gallery components/ImageSection";
 import HeroSection from "../components/gallery components/HeroSection";
-import JoinEventSection from "../components/gallery components/JoinEventSection";
+import ShareMoment from "../components/gallery components/ShareMoment";
+
 
 const Gallery = () => {
   
@@ -10,7 +11,7 @@ const Gallery = () => {
    <>
    <HeroSection/>
    <ImageSection />
-   <JoinEventSection/>
+   <ShareMoment />
    </>
   );
 };

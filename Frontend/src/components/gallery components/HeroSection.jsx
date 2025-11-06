@@ -1,60 +1,58 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { Camera, Heart, Music4 } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section
-      className="relative h-[90vh] flex items-center justify-center text-center bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage:
-          "url('https://boardmasters.com/wp-content/uploads/2025/08/BoardmastersFestival2025_07-08-2025_MattEachusTheMancPhotographer_001_MP1_8979-1200x800.jpg')",
-      }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+    <section className="relative bg-black overflow-hidden text-white pt-7 pb-24">
+      {/* 💫 Background Glows */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute w-[28rem] h-[28rem] bg-pink-600/20 blur-[180px] top-10 left-0 animate-pulse" />
+        <div className="absolute w-[30rem] h-[30rem] bg-purple-700/25 blur-[200px] bottom-0 right-0 animate-pulse" />
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 px-6 text-white max-w-3xl">
-        <motion.h1
-          className="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight"
-          initial={{ opacity: 0, y: -30 }}
+      {/* 🌟 Content */}
+      <div className="relative z-10 max-w-6xl mx-auto text-center px-6">
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="text-pink-400 font-semibold uppercase tracking-[6px] mb-3"
         >
-          Capture the <span className="text-yellow-400">Moments</span> that Matter
+          // Memories in Motion //
+        </motion.p>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.7 }}
+          className="text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight mb-6 bg-clip-text text-transparent bg-white "
+        >
+          Capture the Moments that Matter 
+          <br />
+          <span className="text-pink-500">
+            Dive into Stories that Shine ✨
+          </span>
         </motion.h1>
 
         <motion.p
-          className="text-lg md:text-xl mb-8 text-gray-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="max-w-2xl mx-auto text-lg text-gray-300 leading-relaxed"
         >
-          Dive into our vibrant gallery — every photo tells a story of joy, music, and unforgettable memories.
+          Dive into our vibrant gallery — every photo tells a story of{" "}
+          <span className="text-pink-400 font-semibold">joy</span>,{" "}
+          <span className="text-purple-400 font-semibold">music</span>, and{" "}
+          <span className="text-white font-semibold">unforgettable memories</span>.  
+          Relive the laughter, the lights, and the love — one frame at a time. 🎶
         </motion.p>
 
-        {/* <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
-        >
-          <button className="bg-yellow-400 text-black font-semibold px-6 py-3 rounded-full hover:bg-yellow-500 transition duration-300">
-            Explore Gallery
-          </button>
-        </motion.div> */}
       </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        className="absolute bottom-10 flex flex-col items-center text-white"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 1.8 }}
-      >
-        <ArrowDown size={28} />
-        <p className="text-xs mt-1">Scroll Down</p>
-      </motion.div>
+      {/* ✨ Floating sparkles */}
+      <div className="absolute top-12 left-1/4 w-2 h-2 bg-pink-400 rounded-full blur-sm animate-ping"></div>
+      <div className="absolute bottom-16 right-1/3 w-3 h-3 bg-purple-400 rounded-full blur-sm animate-ping"></div>
     </section>
   );
 };

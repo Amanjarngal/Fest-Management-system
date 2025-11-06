@@ -12,12 +12,26 @@ import {
 } from "lucide-react";
 import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { io } from "socket.io-client";
+import AnnouncementModal from "../pages/AnnouncementModal";
+
+const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountDropdown, setAccountDropdown] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+   const [modalOpen, setModalOpen] = useState(false);
+  const [newCount, setNewCount] = useState(0);
+
+  useEffect(() => {
+    const socket = io(BACKEND_URI, { transports: ["websocket"] });
+    socket.on("newAnnouncement", () => {
+      setNewCount((prev) => prev + 1);
+    });
+    return () => socket.disconnect();
+  }, []);
 
   // ✅ Check login state
   useEffect(() => {
@@ -47,6 +61,7 @@ const Navbar = () => {
   ];
 
   return (
+    <>
     <nav className="bg-black text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
         {/* Logo */}
@@ -72,14 +87,21 @@ const Navbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-6 pl-8 border-l border-gray-800">
-            {/* Announcements Icon */}
-            <Link
-              to="/announcements"
-              className="hover:text-purple-400 transition-colors duration-200"
-            >
-              <Megaphone size={25} className="text-purple-400" />
-            </Link>
-
+             {/* Megaphone icon with notification badge */}
+          <button
+            onClick={() => {
+              setModalOpen(true);
+              setNewCount(0);
+            }}
+            className="relative hover:text-yellow-400 transition-all"
+          >
+            <Megaphone size={25} className="text-purple-400" />
+            {newCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-bounce">
+                {newCount}
+              </span>
+            )}
+          </button>
             {/* 🛒 Cart Icon */}
             <button
               onClick={() => navigate("/cart")}
@@ -215,6 +237,14 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+    {/* Announcement Modal */}
+      <AnnouncementModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
+    </>
+    
+    
   );
 };
 
