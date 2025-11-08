@@ -56,7 +56,7 @@ const Navbar = () => {
     { name: "Events", path: "/eventSchedules" },
     { name: "Gallery", path: "/gallery" },
     { name: "Voting Zone", path: "/voting" },
-    { name: "Gate Pass", path: "/gatepass" },
+    { name: "Stalls ", path: "/stalls" },
     { name: "Contact Us", path: "/contact" },
   ];
 

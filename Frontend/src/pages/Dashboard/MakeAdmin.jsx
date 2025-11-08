@@ -1,43 +1,63 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { getAuth } from "firebase/auth"; // ✅ Import Firebase Auth
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
 const MakeAdmin = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [admins, setAdmins] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const auth = getAuth(); // ✅ Firebase instance
 
-  const token = localStorage.getItem("token");
+  const getToken = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("⚠️ Please log in as an admin first!");
+      return null;
+    }
+    return await user.getIdToken(true); // refreshes the token
+  };
 
   const fetchAdmins = async () => {
     try {
       setRefreshing(true);
+      const token = await getToken();
+      if (!token) return;
+
       const res = await axios.get(`${BACKEND_URI}/api/admin/list-admins`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setAdmins(res.data.admins || []);
+      toast.success("✅ Admin list updated!");
     } catch (err) {
       console.error(err);
-      setMessage("Failed to fetch admins");
+      toast.error("❌ Failed to fetch admins");
     } finally {
       setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    if (token) fetchAdmins();
-  }, [token]);
+    fetchAdmins();
+  }, []);
 
   const handleGrantAdmin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    if (!email.trim()) {
+      toast.error("⚠️ Please enter an email");
+      return;
+    }
 
+    setLoading(true);
     try {
+      const token = await getToken();
+      if (!token) return;
+
       const res = await axios.post(
         `${BACKEND_URI}/api/admin/make-admin`,
         { email },
@@ -48,36 +68,41 @@ const MakeAdmin = () => {
           },
         }
       );
-      setMessage(res.data.message);
+
+      toast.success(res.data?.message || "✅ Admin access granted!");
       setEmail("");
       fetchAdmins();
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.error || "Something went wrong");
+      toast.error(err.response?.data?.error || "❌ Failed to grant admin access");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRemoveAdmin = async (adminEmail) => {
-    if (!window.confirm(`Remove admin access from ${adminEmail}?`)) return;
+    if (!confirm(`Remove admin access from ${adminEmail}?`)) return;
 
     try {
+      const token = await getToken();
+      if (!token) return;
+
       const res = await axios.post(
         `${BACKEND_URI}/api/admin/remove-admin`,
         { email: adminEmail },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage(res.data.message);
+
+      toast.success(res.data?.message || "🗑️ Admin removed successfully!");
       fetchAdmins();
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.error || "Failed to remove admin");
+      toast.error(err.response?.data?.error || "❌ Failed to remove admin");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-purple-950 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-purple-950 p-6 flex flex-col items-center text-white">
       
       {/* Grant Admin Form */}
       <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md mb-10 border border-gray-700">
@@ -101,9 +126,6 @@ const MakeAdmin = () => {
             {loading ? "Granting..." : "Grant Admin Access"}
           </button>
         </form>
-        {message && (
-          <p className="mt-4 text-center text-green-400 font-medium">{message}</p>
-        )}
       </div>
 
       {/* Admin List */}
@@ -116,22 +138,25 @@ const MakeAdmin = () => {
             onClick={fetchAdmins}
             className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl text-white font-semibold shadow-md hover:shadow-purple-500/40 transition-all"
           >
-            Refresh
+            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
+
         {refreshing ? (
           <p className="text-gray-400">Loading admins...</p>
         ) : admins.length > 0 ? (
-          <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
+          <div className="grid gap-4">
             {admins.map((admin) => (
               <div
                 key={admin.uid}
-                className="bg-gray-700 p-4 rounded-xl shadow-lg border border-gray-600 hover:shadow-purple-500/40 transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
+                className="bg-gray-700 p-4 rounded-xl shadow-md border border-gray-600 hover:shadow-purple-500/40 transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
               >
-                <span className="text-white font-medium break-all">{admin.email}</span>
+                <span className="text-white font-medium break-all">
+                  {admin.email}
+                </span>
                 <button
                   onClick={() => handleRemoveAdmin(admin.email)}
-                  className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg font-semibold flex items-center gap-2 text-white w-full sm:w-auto justify-center"
+                  className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg font-semibold flex items-center gap-2 text-white w-full sm:w-auto justify-center transition-all"
                 >
                   <Trash2 size={16} /> Remove
                 </button>

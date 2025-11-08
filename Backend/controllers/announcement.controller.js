@@ -1,9 +1,9 @@
-const Announcement = require("../models/Announcement");
+import Announcement from "../models/Announcement.js";
 
 /**
  * 📨 CREATE Announcement
  */
-const createAnnouncement = async (req, res) => {
+export const createAnnouncement = async (req, res) => {
   try {
     const { title, message } = req.body;
     if (!title || !message) {
@@ -30,7 +30,7 @@ const createAnnouncement = async (req, res) => {
 /**
  * 📜 FETCH All Announcements
  */
-const getAllAnnouncements = async (req, res) => {
+export const getAllAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find().sort({ createdAt: -1 });
     res.json({ announcements });
@@ -43,7 +43,7 @@ const getAllAnnouncements = async (req, res) => {
 /**
  * ✏️ EDIT Announcement
  */
-const editAnnouncement = async (req, res) => {
+export const editAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, message } = req.body;
@@ -66,7 +66,7 @@ const editAnnouncement = async (req, res) => {
 /**
  * ❌ DELETE Announcement
  */
-const deleteAnnouncement = async (req, res) => {
+export const deleteAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Announcement.findByIdAndDelete(id);
@@ -79,9 +79,4 @@ const deleteAnnouncement = async (req, res) => {
   }
 };
 
-module.exports = {
-  createAnnouncement,
-  getAllAnnouncements,
-  editAnnouncement,
-  deleteAnnouncement,
-};
+

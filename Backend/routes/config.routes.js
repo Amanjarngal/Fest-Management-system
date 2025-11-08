@@ -1,8 +1,8 @@
-const express = require("express");
+import  express from "express";
 const router = express.Router();
-const verifyToken = require("../middleware/auth.middleware");
-const requireAdmin = require("../middleware/admin.middleware");
-const { setVotingLive, getVotingStatus } = require("../controllers/config.controller");
+import { verifyToken } from"../middleware/auth.middleware.js";
+import  { requireAdmin } from "../middleware/admin.middleware.js";
+import { setVotingLive, getVotingStatus } from "../controllers/config.controller.js";
 
 // ✅ Public route — get current status
 router.get("/status", getVotingStatus);
@@ -10,4 +10,4 @@ router.get("/status", getVotingStatus);
 // ✅ Admin-only — toggle voting live/unlive
 router.post("/toggle/live", verifyToken, requireAdmin, setVotingLive);
 
-module.exports = router;
+export default router;

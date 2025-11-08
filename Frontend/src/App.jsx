@@ -6,7 +6,6 @@ import About from './pages/About';
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import GatePass from "./pages/gatepass";
 import VotingZone from "./pages/VotingZone";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Gallery from "./pages/Gallery";
@@ -28,6 +27,10 @@ import FeedbackDashboard from "./pages/Dashboard/FeedbackDashboard";
 import Footer from "./components/Footer";
 import NotFound from "./pages/NotFound";
 import AnnouncementDashboard from "./pages/Dashboard/AnnouncementDashboard";
+import Stalls from "./pages/Dashboard/Stalls";
+import PublicRoute from "./context/PublicRoute";
+import StallDetails from "./pages/StallDetails";
+import StallsList from "./pages/StallsList";
 
 function AppContent() {
   const location = useLocation();
@@ -62,17 +65,17 @@ function AppContent() {
         <Route path='/about' element={<About />} />
 
         {/* protected routes */}
-        <Route
-          path='/gatepass'
-          element={<ProtectedRoute><GatePass /></ProtectedRoute>}
-        />
+        <Route path="/stalls" element={
+          <ProtectedRoute> <StallsList /> </ProtectedRoute> 
+          } />
+          <Route path="/stall/:id" element={<StallDetails />} />
         <Route
           path="/voting"
           element={<ProtectedRoute><VotingZone /></ProtectedRoute>}
         />
 
-        <Route path='/login' element={<Login />} />
-        <Route path='/signup' element={<Signup />} />
+        <Route path='/login' element= {<PublicRoute> <Login /> </PublicRoute>   } />
+        <Route path='/signup' element={  <PublicRoute><Signup /> </PublicRoute>} />
         <Route path='/gallery' element={<Gallery />} />
         <Route path='/eventSchedules' element={<EventSchedule />} />
         <Route path='/pricing/:eventId' element={<PricingPage />} />
@@ -100,6 +103,7 @@ function AppContent() {
           <Route path="performers" element={<PerformerDashboard />} />
           <Route path="feedback" element={<FeedbackDashboard />} />
           <Route path="announcement" element={<AnnouncementDashboard />} />
+          <Route path="stalls" element={<Stalls />} />
         </Route>
       </Routes>
 

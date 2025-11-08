@@ -1,11 +1,11 @@
-const Participant = require("../models/Participant");
-const { uploadBuffer } = require("../utils/cloudinaryUpload");
-const multer = require("multer");
+import   Participant  from "../models/Participant.js";
+import  { uploadBuffer } from "../utils/cloudinaryUpload.js";
+import multer from "multer";
 const upload = multer(); // memory storage by default
 
 // create participant (admin)
 // Expect multipart/form-data: fields name, tagNumber, details and file "photo"
-const createParticipant = [
+export const createParticipant = [
   upload.single("photo"),
   async (req, res) => {
     try {
@@ -28,7 +28,7 @@ const createParticipant = [
   }
 ];
 
-const editParticipant = [
+export const editParticipant = [
   upload.single("photo"),
   async (req, res) => {
     try {
@@ -47,7 +47,7 @@ const editParticipant = [
   }
 ];
 
-const deleteParticipant = async (req, res) => {
+export const deleteParticipant = async (req, res) => {
   try {
     const { id } = req.params;
     await Participant.findByIdAndDelete(id);
@@ -57,7 +57,7 @@ const deleteParticipant = async (req, res) => {
   }
 };
 
-const listParticipants = async (req, res) => {
+export const listParticipants = async (req, res) => {
   try {
     const participants = await Participant.find().sort({ votes: -1, name: 1 });
     res.json({ participants });
@@ -66,4 +66,4 @@ const listParticipants = async (req, res) => {
   }
 };
 
-module.exports = { createParticipant, editParticipant, deleteParticipant, listParticipants };
+

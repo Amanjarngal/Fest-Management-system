@@ -1,12 +1,11 @@
 // controllers/voteController.js
-const Vote = require("../models/Vote");
-const Participant = require("../models/Participant");
-const AppConfig = require("../models/AppConfig");
-// const Participant = require("../models/Participant");
-// const Vote = require("../models/Vote");
+import Vote from "../models/Vote.js";
+import Participant from "../models/Participant.js"
+import AppConfig from "../models/AppConfig.js";
+
 
 // 🗳️ CAST VOTE
-async function castVote(req, res) {
+export async function castVote(req, res) {
   try {
     const cfg = await AppConfig.findOne({ key: "voting" });
     if (!cfg?.value?.isLive)
@@ -57,7 +56,7 @@ async function castVote(req, res) {
 }
 
 // 📊 GET VOTE COUNT FOR EACH PARTICIPANT
-async function getVotes(req, res) {
+export async function getVotes(req, res) {
   try {
     const participants = await Participant.find()
       .select("name tagNumber photoUrl votes") // fix field name: photoUrl
@@ -75,7 +74,7 @@ async function getVotes(req, res) {
 }
 
 // ✅ NEW: GET VOTED PARTICIPANTS OF CURRENT USER
-async function getUserVotes(req, res) {
+export async function getUserVotes(req, res) {
   try {
     const userId = req.user.uid;
     const votes = await Vote.find({ userId }).select("participantId -_id");
@@ -88,7 +87,7 @@ async function getUserVotes(req, res) {
 }
 
 // 📊 Get total participants & votes
-async function getVotingStats(req, res) {
+export async function getVotingStats(req, res) {
   try {
     const totalParticipants = await Participant.countDocuments();
     const totalVotes = await Vote.countDocuments();
@@ -103,4 +102,4 @@ async function getVotingStats(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-module.exports = { castVote, getVotes, getUserVotes, getVotingStats };
+

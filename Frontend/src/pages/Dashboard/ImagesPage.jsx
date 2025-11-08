@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, UploadCloud, Edit2, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const ImagesPage = () => {
   const [images, setImages] = useState([]);
@@ -19,8 +20,9 @@ const ImagesPage = () => {
     try {
       const res = await axios.get("http://localhost:5000/api/images");
       setImages(res.data.images);
+      toast.success("✅ Images loaded successfully!");
     } catch (err) {
-      console.error(err);
+      toast.error("❌ Failed to fetch images!");
     }
   };
 
@@ -46,26 +48,28 @@ const ImagesPage = () => {
     formData.append("description", imageData.description);
     formData.append("tags", imageData.tags);
     if (selectedFile) formData.append("image", selectedFile);
-    else formData.append("image", imageData.image); // for URL
+    else formData.append("image", imageData.image);
 
     try {
       if (editId) {
-        await axios.put(
+        const res = await axios.put(
           `http://localhost:5000/api/images/${editId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
+        toast.success(res.data?.message || "🖼️ Image updated successfully!");
         setEditId(null);
       } else {
-        await axios.post("http://localhost:5000/api/images", formData, {
+        const res = await axios.post("http://localhost:5000/api/images", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        toast.success(res.data?.message || "📸 Image added successfully!");
       }
       setImageData({ title: "", description: "", tags: "", image: "" });
       setSelectedFile(null);
       fetchImages();
     } catch (err) {
-      console.error(err);
+      toast.error(err.response?.data?.error || "❌ Upload failed!");
     }
   };
 
@@ -78,17 +82,19 @@ const ImagesPage = () => {
       tags: img.tags.join(", "),
       image: img.imageUrl,
     });
+    toast("✏️ Edit mode activated", { icon: "🖋️" });
   };
 
   // Delete image
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure to delete this image?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/images/${id}`);
-        fetchImages();
-      } catch (err) {
-        console.error(err);
-      }
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
+
+    try {
+      const res = await axios.delete(`http://localhost:5000/api/images/${id}`);
+      toast.success(res.data?.message || "🗑️ Image deleted successfully!");
+      fetchImages();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "❌ Failed to delete image!");
     }
   };
 
@@ -104,7 +110,7 @@ const ImagesPage = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
-          🎨Image Dashboard
+          🎨 Image Dashboard
         </h1>
 
         {/* Upload / Edit Form */}

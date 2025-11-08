@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Trash2, UploadCloud, Edit3, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -18,7 +19,7 @@ const EventsDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
-  const [editingId, setEditingId] = useState(null); // 🆕 track edit mode
+  const [editingId, setEditingId] = useState(null);
 
   // Fetch events
   const fetchEvents = async () => {
@@ -27,6 +28,7 @@ const EventsDashboard = () => {
       setEvents(res.data);
     } catch (err) {
       console.error(err);
+      toast.error("❌ Failed to load events");
     }
   };
 
@@ -52,7 +54,7 @@ const EventsDashboard = () => {
     setPreview(URL.createObjectURL(file));
   };
 
-  // Time formatting
+  // Format Time
   const formatTime = (time) => {
     if (!time) return "";
     let [hours, minutes] = time.split(":");
@@ -62,7 +64,7 @@ const EventsDashboard = () => {
     return `${hours}:${minutes} ${ampm}`;
   };
 
-  // Submit form (add or edit)
+  // Add / Update Event
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -72,31 +74,30 @@ const EventsDashboard = () => {
     Object.entries({ ...formData, time: combinedTime }).forEach(([k, v]) => data.append(k, v));
 
     try {
+      let res;
       if (editingId) {
-        // 🆕 Edit existing event
-        await axios.put(`${BACKEND_URI}/api/events/${editingId}`, data, {
+        res = await axios.put(`${BACKEND_URI}/api/events/${editingId}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Event updated successfully!");
+        toast.success(res.data.message || "✅ Event updated successfully!");
       } else {
-        // ➕ Add new event
-        await axios.post(`${BACKEND_URI}/api/events/add`, data, {
+        res = await axios.post(`${BACKEND_URI}/api/events/add`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Event added successfully!");
+        toast.success(res.data.message || "✅ Event added successfully!");
       }
 
       resetForm();
       fetchEvents();
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to save event");
+      toast.error(err.response?.data?.message || "❌ Failed to save event");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🆕 Handle edit
+  // Edit Event
   const handleEdit = (event) => {
     const [start, end] = event.time?.split(" - ") || ["", ""];
     setFormData({
@@ -111,9 +112,10 @@ const EventsDashboard = () => {
     });
     setPreview(event.imageUrl);
     setEditingId(event._id);
+    toast("✏️ Edit mode enabled", { icon: "📝" });
   };
 
-  // 🆕 Reset form
+  // Reset form
   const resetForm = () => {
     setFormData({
       title: "",
@@ -129,43 +131,48 @@ const EventsDashboard = () => {
     setEditingId(null);
   };
 
-  // Delete event
+  // Delete Event
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this event?")) return;
     try {
-      await axios.delete(`${BACKEND_URI}/api/events/${id}`);
+      const res = await axios.delete(`${BACKEND_URI}/api/events/${id}`);
+      toast.success(res.data.message || "🗑️ Event deleted successfully!");
       fetchEvents();
     } catch (err) {
       console.error(err);
+      toast.error(err.response?.data?.message || "❌ Failed to delete event");
     }
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-4 sm:px-6 md:px-10 py-6 max-w-7xl mx-auto">
       {/* Form Section */}
-      <div className="bg-gray-900 p-6 rounded-2xl shadow-md border border-gray-700">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold mb-4">
+      <div className="bg-gray-900 p-5 sm:p-6 md:p-8 rounded-2xl shadow-lg border border-gray-700">
+        <div className="flex flex-wrap justify-between items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">
             {editingId ? "✏️ Edit Event" : "🎫 Add New Event"}
           </h2>
           {editingId && (
             <button
               onClick={resetForm}
-              className="text-gray-400 hover:text-red-400 flex items-center gap-1"
+              className="text-gray-400 hover:text-red-400 flex items-center gap-1 text-sm"
             >
               <X size={16} /> Cancel Edit
             </button>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6 text-gray-300">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 text-gray-300"
+        >
           <input
             type="text"
             name="title"
             placeholder="Event Title"
             value={formData.title}
             onChange={handleChange}
-            className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500"
+            className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500 w-full"
             required
           />
           <input
@@ -174,14 +181,14 @@ const EventsDashboard = () => {
             placeholder="Day (auto-filled)"
             value={formData.day}
             readOnly
-            className="p-3 rounded-lg bg-gray-800 border border-gray-700 opacity-80 cursor-not-allowed"
+            className="p-3 rounded-lg bg-gray-800 border border-gray-700 opacity-80 cursor-not-allowed w-full"
           />
           <input
             type="date"
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+            className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full"
             required
           />
           <input
@@ -190,31 +197,30 @@ const EventsDashboard = () => {
             placeholder="Location"
             value={formData.location}
             onChange={handleChange}
-            className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+            className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full"
             required
           />
 
-          {/* Start & End Time */}
-          <div className="flex items-center gap-3 md:col-span-2">
-            <div className="flex flex-col w-1/2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 sm:col-span-2">
+            <div className="flex flex-col flex-1 mb-3 sm:mb-0">
               <label className="text-sm text-gray-400 mb-1">Start Time</label>
               <input
                 type="time"
                 name="startTime"
                 value={formData.startTime}
                 onChange={handleChange}
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500"
+                className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500 w-full"
                 required
               />
             </div>
-            <div className="flex flex-col w-1/2">
+            <div className="flex flex-col flex-1">
               <label className="text-sm text-gray-400 mb-1">End Time</label>
               <input
                 type="time"
                 name="endTime"
                 value={formData.endTime}
                 onChange={handleChange}
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500"
+                className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-500 w-full"
                 required
               />
             </div>
@@ -226,10 +232,10 @@ const EventsDashboard = () => {
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="p-3 rounded-lg bg-gray-800 border border-gray-700 md:col-span-2"
+            className="p-3 rounded-lg bg-gray-800 border border-gray-700 sm:col-span-2 w-full"
           />
 
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 rounded-lg p-4 md:col-span-2">
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 rounded-lg p-4 sm:col-span-2 w-full text-center">
             <label className="cursor-pointer flex flex-col items-center">
               <UploadCloud size={28} className="text-purple-500" />
               <span className="text-sm mt-2">Upload Image</span>
@@ -249,7 +255,7 @@ const EventsDashboard = () => {
             disabled={loading}
             className={`${
               editingId ? "bg-yellow-600 hover:bg-yellow-700" : "bg-purple-600 hover:bg-purple-700"
-            } transition text-white font-medium py-2 rounded-lg md:col-span-2`}
+            } transition text-white font-medium py-2 rounded-lg sm:col-span-2`}
           >
             {loading
               ? editingId
@@ -263,10 +269,10 @@ const EventsDashboard = () => {
       </div>
 
       {/* Event List */}
-      <div className="bg-gray-900 p-6 rounded-2xl shadow-md border border-gray-700">
-        <h2 className="text-xl font-semibold mb-4">📅 All Events</h2>
+      <div className="bg-gray-900 p-5 sm:p-6 md:p-8 rounded-2xl shadow-lg border border-gray-700">
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-white">📅 All Events</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-700 text-sm">
+          <table className="min-w-full border border-gray-700 text-sm sm:text-base">
             <thead className="bg-gray-800 text-gray-300">
               <tr>
                 <th className="p-2 border border-gray-700">Title</th>
@@ -280,24 +286,24 @@ const EventsDashboard = () => {
             </thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event._id} className="hover:bg-gray-800">
+                <tr key={event._id} className="hover:bg-gray-800 transition">
                   <td className="p-2 border border-gray-700">{event.title}</td>
                   <td className="p-2 border border-gray-700">{event.date}</td>
                   <td className="p-2 border border-gray-700">{event.day}</td>
                   <td className="p-2 border border-gray-700">{event.time}</td>
                   <td className="p-2 border border-gray-700">{event.location}</td>
-                  <td className="p-2 border border-gray-700">
+                  <td className="p-2 border border-gray-700 text-center">
                     {event.imageUrl ? (
                       <img
                         src={event.imageUrl}
                         alt="event"
-                        className="w-12 h-12 rounded object-cover"
+                        className="w-12 h-12 rounded object-cover mx-auto"
                       />
                     ) : (
                       "—"
                     )}
                   </td>
-                  <td className="p-2 border border-gray-700 text-center space-x-3">
+                  <td className="p-2 border border-gray-700 text-center space-x-2">
                     <button
                       onClick={() => handleEdit(event)}
                       className="text-yellow-400 hover:text-yellow-600"

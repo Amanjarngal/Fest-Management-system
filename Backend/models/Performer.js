@@ -28,4 +28,5 @@ const performerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Performer = mongoose.model("Performer", performerSchema);
+ const Performer = mongoose.model("Performer", performerSchema);
+export default Performer;

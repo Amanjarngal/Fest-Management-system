@@ -1,25 +1,21 @@
-const { auth } = require("../config/firebase");
+import { admin } from "../config/firebase.js";
 
-async function verifyToken(req, res, next) {
+export const verifyToken = async (req, res, next) => {
+  const header = req.headers.authorization;
+
+  if (!header?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: No token" });
+  }
+
+  const idToken = header.split(" ")[1];
+
   try {
-    const header = req.headers.authorization;
-    if (!header || !header.startsWith("Bearer "))
-      return res.status(401).json({ error: "Unauthorized" });
-
-    const idToken = header.split(" ")[1]; // <-- fixed
-    const decoded = await auth.verifyIdToken(idToken);
-
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      claims: decoded // claims now include custom claims like role/admin
-    };
-
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    req.user = decoded;
+    // console.log("✅ Verified token:", decoded.email, decoded.admin); // Debug
     next();
   } catch (err) {
-    console.error("Token verification error:", err);
-    res.status(401).json({ error: "Invalid or expired token" });
+    console.error("❌ Token verification failed:", err.message);
+    res.status(403).json({ error: "Invalid or expired token" });
   }
-}
-
-module.exports = verifyToken;
+};

@@ -122,3 +122,37 @@ export const getEventPricings = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/**
+ * Delete a pricing tier permanently
+ */
+export const deletePricing = async (req, res) => {
+  try {
+    const { pricingId } = req.params;
+
+    const pricing = await Pricing.findById(pricingId);
+    if (!pricing) return res.status(404).json({ error: "Pricing not found" });
+
+    // Get the related event
+    const event = await Event.findById(pricing.event);
+
+    // Remove the pricing record
+    await Pricing.findByIdAndDelete(pricingId);
+
+    // Optional: update event tickets count
+    if (event) {
+      const remainingPricings = await Pricing.find({ event: event._id });
+      const totalTickets = remainingPricings.reduce(
+        (acc, p) => acc + (p.totalTickets || 0),
+        0
+      );
+      event.ticketsAvailable = totalTickets;
+      await event.save();
+    }
+
+    res.status(200).json({ message: "Pricing deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};

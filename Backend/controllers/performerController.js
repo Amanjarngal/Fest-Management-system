@@ -1,4 +1,4 @@
-import { Performer } from "../models/Performer.js";
+import  Performer  from "../models/Performer.js";
 import  Event  from "../models/Event.js"; // Make sure you have Event model
 
 /**

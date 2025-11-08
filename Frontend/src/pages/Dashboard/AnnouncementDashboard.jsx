@@ -55,12 +55,12 @@ const AnnouncementDashboard = () => {
           formData,
           { headers }
         );
-        toast.success("Announcement updated!");
+        toast.success("✅ Announcement updated!");
       } else {
         await axios.post(`${BACKEND_URI}/api/announcements`, formData, {
           headers,
         });
-        toast.success("Announcement created!");
+        toast.success("📢 Announcement created!");
       }
       setFormData({ title: "", message: "" });
       setEditingId(null);
@@ -79,7 +79,7 @@ const AnnouncementDashboard = () => {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       await axios.delete(`${BACKEND_URI}/api/announcements/${id}`, { headers });
-      toast.success("Deleted successfully!");
+      toast.success("🗑️ Deleted successfully!");
       setAnnouncements((prev) => prev.filter((a) => a._id !== id));
     } catch {
       toast.error("Failed to delete announcement.");
@@ -90,76 +90,90 @@ const AnnouncementDashboard = () => {
   const handleEdit = (a) => {
     setEditingId(a._id);
     setFormData({ title: a.title, message: a.message });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-10">
-      <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
-        <Megaphone className="text-yellow-400" /> Manage Announcements
-      </h1>
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-purple-950 text-white px-4 sm:px-6 md:px-10 py-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center gap-2">
+          <Megaphone className="text-yellow-400 w-7 h-7" />
+          Manage Announcements
+        </h1>
+      </div>
 
-      {/* Form */}
+      {/* Form Section */}
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 bg-gray-900 p-6 rounded-xl border border-gray-800 shadow-xl mb-10"
+        className="space-y-5 bg-gray-900 p-5 sm:p-6 md:p-8 rounded-2xl border border-gray-800 shadow-lg mb-10"
       >
-        <h2 className="text-xl font-semibold text-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-white">
           {editingId ? "✏️ Edit Announcement" : "📢 Add New Announcement"}
         </h2>
+
         <input
           type="text"
           name="title"
           placeholder="Announcement Title"
           value={formData.title}
           onChange={handleChange}
-          className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-100"
         />
+
         <textarea
           name="message"
           rows="3"
           placeholder="Announcement Message..."
           value={formData.message}
           onChange={handleChange}
-          className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-100"
         />
+
         <button
           type="submit"
           disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 transition-colors text-black font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all"
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-lg transition-all ${
+            loading
+              ? "bg-gray-600 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-700 text-white"
+          }`}
         >
           <PlusCircle size={18} />
-          {editingId ? "Update" : "Post"}
+          {editingId ? "Update" : loading ? "Posting..." : "Post"}
         </button>
       </form>
 
-      {/* List */}
+      {/* Announcements List */}
       <div className="space-y-5">
         {announcements.length > 0 ? (
           announcements.map((a) => (
             <div
               key={a._id}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex justify-between items-start shadow-md hover:shadow-yellow-400/10 transition-all"
+              className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-start gap-4 shadow-md hover:shadow-yellow-400/10 transition-all"
             >
-              <div>
+              {/* Text Content */}
+              <div className="flex-1">
                 <h3 className="text-lg font-semibold text-yellow-400 flex items-center gap-2">
                   <Megaphone className="w-5 h-5 text-yellow-500" /> {a.title}
                 </h3>
-                <p className="text-gray-300 mt-1">{a.message}</p>
+                <p className="text-gray-300 mt-1 break-words">{a.message}</p>
                 <p className="text-xs text-gray-500 mt-2">
                   {new Date(a.createdAt).toLocaleString()}
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              {/* Actions */}
+              <div className="flex sm:flex-col md:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={() => handleEdit(a)}
-                  className="bg-blue-600 hover:bg-blue-500 p-2 rounded-lg flex items-center gap-1 text-sm transition-all"
+                  className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm"
                 >
                   <Edit size={16} /> Edit
                 </button>
                 <button
                   onClick={() => handleDelete(a._id)}
-                  className="bg-red-600 hover:bg-red-500 p-2 rounded-lg flex items-center gap-1 text-sm transition-all"
+                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm"
                 >
                   <Trash2 size={16} /> Delete
                 </button>

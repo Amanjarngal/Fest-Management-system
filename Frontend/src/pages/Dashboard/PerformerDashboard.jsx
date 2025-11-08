@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Trash2, Edit3, PlusCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -13,18 +14,18 @@ const PerformerDashboard = () => {
     name: "",
     role: "",
     day: "",
-    image: null, // file object
+    image: null,
   });
 
   const [editMode, setEditMode] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch events (like PricingDashboard)
+  // ✅ Fetch events
   useEffect(() => {
     axios
       .get(`${BACKEND_URI}/api/events`)
       .then((res) => setEvents(res.data))
-      .catch((err) => console.error("Error fetching events:", err));
+      .catch(() => toast.error("❌ Failed to load events"));
   }, []);
 
   // ✅ Fetch performers for selected event
@@ -33,7 +34,7 @@ const PerformerDashboard = () => {
       axios
         .get(`${BACKEND_URI}/api/performers/event/${selectedEvent}`)
         .then((res) => setPerformers(res.data.performers || []))
-        .catch((err) => console.error("Error fetching performers:", err));
+        .catch(() => toast.error("❌ Failed to load performers"));
     } else {
       setPerformers([]);
     }
@@ -44,7 +45,7 @@ const PerformerDashboard = () => {
     e.preventDefault();
 
     if (!formData.name || !formData.day || !selectedEvent || !formData.image) {
-      alert("⚠️ Please fill all required fields!");
+      toast.error("⚠️ Please fill all required fields!");
       return;
     }
 
@@ -58,16 +59,17 @@ const PerformerDashboard = () => {
     setLoading(true);
 
     try {
+      let res;
       if (editMode) {
-        await axios.put(`${BACKEND_URI}/api/performers/${editMode}`, data, {
+        res = await axios.put(`${BACKEND_URI}/api/performers/${editMode}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Performer updated!");
+        toast.success(res.data?.message || "✅ Performer updated successfully!");
       } else {
-        await axios.post(`${BACKEND_URI}/api/performers`, data, {
+        res = await axios.post(`${BACKEND_URI}/api/performers`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("🎤 Performer added!");
+        toast.success(res.data?.message || "🎤 Performer added successfully!");
       }
 
       // Reset form
@@ -75,11 +77,10 @@ const PerformerDashboard = () => {
       setEditMode(null);
 
       // Refresh list
-      const res = await axios.get(`${BACKEND_URI}/api/performers/event/${selectedEvent}`);
-      setPerformers(res.data.performers || []);
+      const updated = await axios.get(`${BACKEND_URI}/api/performers/event/${selectedEvent}`);
+      setPerformers(updated.data.performers || []);
     } catch (err) {
-      console.error("Error saving performer:", err.response?.data || err);
-      alert("❌ Upload failed!");
+      toast.error(err.response?.data?.message || "❌ Upload failed!");
     } finally {
       setLoading(false);
     }
@@ -92,33 +93,40 @@ const PerformerDashboard = () => {
       name: p.name,
       role: p.role,
       day: p.day,
-      image: null, // user must re-upload if changing
+      image: null,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+    toast("✏️ Edit mode activated", { icon: "📝" });
   };
 
   // 🗑 Delete Performer
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this performer?")) return;
     try {
-      await axios.delete(`${BACKEND_URI}/api/performers/${id}`);
+      const res = await axios.delete(`${BACKEND_URI}/api/performers/${id}`);
       setPerformers(performers.filter((p) => p._id !== id));
+      toast.success(res.data?.message || "🗑️ Performer deleted successfully!");
     } catch (err) {
-      console.error("Error deleting performer:", err);
+      toast.error(err.response?.data?.message || "❌ Failed to delete performer");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-10">
-      <h1 className="text-3xl font-bold mb-8">🎤 Manage Performers</h1>
+    <div className="min-h-screen bg-gray-950 text-white px-4 sm:px-6 md:px-10 py-8 space-y-10">
+      {/* Page Title */}
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-yellow-400">
+        🎤 Manage Performers
+      </h1>
 
       {/* Event Selector */}
       <div className="mb-8">
-        <label className="block mb-2 text-gray-400">Select Event:</label>
+        <label className="block mb-2 text-gray-400 text-sm sm:text-base">
+          Select Event:
+        </label>
         <select
           value={selectedEvent}
           onChange={(e) => setSelectedEvent(e.target.value)}
-          className="w-full md:w-1/2 p-3 bg-gray-800 border border-gray-700 rounded-lg"
+          className="w-full sm:w-1/2 p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-yellow-500"
         >
           <option value="">-- Choose an event --</option>
           {events.map((e) => (
@@ -133,20 +141,20 @@ const PerformerDashboard = () => {
       {selectedEvent && (
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 bg-gray-900 p-6 rounded-xl shadow-xl mb-10"
+          className="space-y-6 bg-gray-900 p-5 sm:p-6 md:p-8 rounded-xl shadow-xl border border-gray-800"
         >
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2 text-yellow-400">
             <PlusCircle className="text-yellow-400" />
             {editMode ? "Edit Performer" : "Add New Performer"}
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <input
               type="text"
               placeholder="Performer Name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+              className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full focus:ring-2 focus:ring-yellow-500"
             />
 
             <input
@@ -154,7 +162,7 @@ const PerformerDashboard = () => {
               placeholder="Role (e.g. Singer)"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+              className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full focus:ring-2 focus:ring-yellow-500"
             />
 
             <input
@@ -162,23 +170,21 @@ const PerformerDashboard = () => {
               placeholder="Day (e.g. Day 1)"
               value={formData.day}
               onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+              className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full focus:ring-2 focus:ring-yellow-500"
             />
 
             <input
               type="file"
               accept="image/*"
-              onChange={(e) =>
-                setFormData({ ...formData, image: e.target.files[0] })
-              }
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700 col-span-2"
+              onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
+              className="p-3 rounded-lg bg-gray-800 border border-gray-700 w-full sm:col-span-2 cursor-pointer focus:ring-2 focus:ring-yellow-500"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-all"
+            className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-all w-full sm:w-auto"
           >
             {loading
               ? "Uploading..."
@@ -191,15 +197,18 @@ const PerformerDashboard = () => {
 
       {/* Performer List */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Current Performers</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">
+          Current Performers
+        </h2>
+
         {performers.length === 0 ? (
           <p className="text-gray-400">No performers added yet.</p>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {performers.map((p) => (
               <div
                 key={p._id}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl hover:shadow-yellow-500/20 transition-all"
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 shadow-xl hover:shadow-yellow-500/20 transition-all"
               >
                 <img
                   src={p.image}
@@ -210,16 +219,17 @@ const PerformerDashboard = () => {
                 <p className="text-gray-400">{p.role}</p>
                 <p className="text-gray-500 text-sm">{p.day}</p>
 
-                <div className="flex gap-3 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   <button
                     onClick={() => handleEdit(p)}
-                    className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2"
+                    className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm w-full sm:w-auto justify-center"
                   >
                     <Edit3 size={16} /> Edit
                   </button>
+
                   <button
                     onClick={() => handleDelete(p._id)}
-                    className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2"
+                    className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm w-full sm:w-auto justify-center"
                   >
                     <Trash2 size={16} /> Delete
                   </button>

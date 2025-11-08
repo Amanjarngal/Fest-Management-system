@@ -5,8 +5,8 @@ import {
   scheduleLeaderboard,
   getLeaderboardStatus,
 } from "../controllers/leaderboard.controller.js";
-import verifyToken from "../middleware/auth.middleware.js";
-import requireAdmin from "../middleware/admin.middleware.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
 
 const router = express.Router();
 

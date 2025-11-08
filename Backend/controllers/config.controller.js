@@ -1,7 +1,7 @@
-const AppConfig = require("../models/AppConfig");
+import AppConfig from "../models/AppConfig.js";
 
 // ✅ Set (toggle) voting live status
-async function setVotingLive(req, res) {
+export async function setVotingLive(req, res) {
   try {
     const { isLive } = req.body;
 
@@ -30,7 +30,7 @@ async function setVotingLive(req, res) {
 }
 
 // ✅ Get current status
-async function getVotingStatus(req, res) {
+export async function getVotingStatus(req, res) {
   try {
     const cfg = await AppConfig.findOne({ key: "voting" });
     const isLive = cfg?.value?.isLive || false;
@@ -41,4 +41,4 @@ async function getVotingStatus(req, res) {
   }
 }
 
-module.exports = { setVotingLive, getVotingStatus };
+// module.exports = { setVotingLive, getVotingStatus };

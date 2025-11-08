@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  RefreshCcw,
-  Trash2,
-  Search,
-  Star,
-  Loader2,
-} from "lucide-react";
+import { RefreshCcw, Search, Star, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI || "http://localhost:5000";
 
@@ -22,9 +17,10 @@ const FeedbackDashboard = () => {
       setLoading(true);
       const res = await axios.get(`${BACKEND_URI}/api/feedback`);
       setFeedbacks(res.data.feedbacks || []);
+      toast.success("✅ Feedbacks loaded successfully!");
     } catch (err) {
       console.error("Error fetching feedbacks:", err);
-      alert("Failed to load feedbacks.");
+      toast.error("❌ Failed to load feedbacks");
     } finally {
       setLoading(false);
     }
@@ -34,21 +30,24 @@ const FeedbackDashboard = () => {
     fetchFeedbacks();
   }, []);
 
-
   // ✅ Handle refresh
   const handleRefresh = async () => {
     try {
       setRefreshing(true);
       await fetchFeedbacks();
+      toast("🔄 Feedback list refreshed");
+    } catch (err) {
+      toast.error("⚠️ Could not refresh feedbacks");
     } finally {
       setRefreshing(false);
     }
   };
 
   // ✅ Search filter
-  const filtered = feedbacks.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase()) ||
-    f.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = feedbacks.filter(
+    (f) =>
+      f.name.toLowerCase().includes(search.toLowerCase()) ||
+      f.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -56,8 +55,8 @@ const FeedbackDashboard = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h1 className="text-3xl md:text-4xl font-bold bg-white bg-clip-text text-transparent">
-             Manage Feedback
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            🌟 Manage Feedback
           </h1>
 
           <button
@@ -96,7 +95,7 @@ const FeedbackDashboard = () => {
             {filtered.map((f) => (
               <div
                 key={f._id}
-                className="bg-gray-900/80 rounded-xl border border-gray-700 shadow-lg  transition-all overflow-hidden"
+                className="bg-gray-900/80 rounded-xl border border-gray-700 shadow-lg hover:shadow-pink-500/20 transition-all overflow-hidden"
               >
                 <div className="p-4 space-y-3">
                   <div>
@@ -128,7 +127,6 @@ const FeedbackDashboard = () => {
                   <p className="text-gray-500 text-xs">
                     {new Date(f.createdAt).toLocaleString()}
                   </p>
-
                 </div>
               </div>
             ))}

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const VoteSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true, unique: true, }, // firebase uid
@@ -11,4 +11,4 @@ const VoteSchema = new mongoose.Schema({
 // For one vote per contest overall:
 VoteSchema.index({ userId: 1 }, { unique: true });
 
-module.exports = mongoose.model("Vote", VoteSchema);
+export default mongoose.model("Vote", VoteSchema);

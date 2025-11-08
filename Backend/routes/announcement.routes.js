@@ -1,13 +1,13 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
+import {
   createAnnouncement,
   getAllAnnouncements,
   editAnnouncement,
   deleteAnnouncement,
-} = require("../controllers/announcement.controller");
-const verifyToken = require("../middleware/auth.middleware");
-const requireAdmin = require("../middleware/admin.middleware");
+} from "../controllers/announcement.controller.js";
+import { verifyToken }  from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
 
 // Public: Fetch all announcements
 router.get("/", getAllAnnouncements);
@@ -17,4 +17,4 @@ router.post("/", verifyToken, requireAdmin, createAnnouncement);
 router.put("/:id", verifyToken, requireAdmin, editAnnouncement);
 router.delete("/:id", verifyToken, requireAdmin, deleteAnnouncement);
 
-module.exports = router;
+export default router;

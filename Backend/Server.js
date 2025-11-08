@@ -3,6 +3,7 @@ import connectDB from "./config/db.js";
 import app from "./app.js";
 import http from "http";
 import { Server } from "socket.io";
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
@@ -31,6 +32,9 @@ io.on("connection", (socket) => {
     console.log("🔴 A user disconnected:", socket.id);
   });
 });
+
+app.use(notFound);
+app.use(errorHandler);
 
 // ✅ Start the server
 const PORT = process.env.PORT || 5000;

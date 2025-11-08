@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const verifyToken = require("../middleware/auth.middleware");
-const { castVote, getVotes, getUserVotes, getVotingStats } = require("../controllers/vote.controller");
-const { setVotingLive } = require("../controllers/config.controller");
-const requireAdmin = require("../middleware/admin.middleware");
+import { verifyToken} from "../middleware/auth.middleware.js";
+import { castVote, getVotes, getUserVotes, getVotingStats } from  "../controllers/vote.controller.js";
+// import { setVotingLive } from "../controllers/config.controlle.js";
+// import {requireAdmin} from "../middleware/admin.middleware.js";
 
 router.post("/:participantId", verifyToken, castVote);
 // Get votes of all participants
@@ -11,4 +11,4 @@ router.get("/all", getVotes );
 router.get("/user", verifyToken, getUserVotes);
 router.get("/", getVotingStats);
 
-module.exports = router;
+export default router;

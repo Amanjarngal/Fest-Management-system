@@ -1,7 +1,7 @@
 import express from "express";
 import { getAdmins, makeAdmin, removeAdmin } from "../controllers/admin.controller.js";
-import requireAdmin from "../middleware/admin.middleware.js";
-import verifyToken from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 

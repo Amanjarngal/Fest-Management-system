@@ -1,9 +1,10 @@
-function requireAdmin(req, res, next) {
-  const claims = req.user?.claims;
-  if (claims?.role === "admin" || claims?.admin === true) {
+export const requireAdmin = (req, res, next) => {
+  const user = req.user;
+
+  if (user?.admin === true || user?.role === "admin") {
     return next();
   }
-  return res.status(403).json({ error: "Admin only" });
-}
 
-module.exports = requireAdmin;
+  // console.warn(`🚫 Access denied for user: ${user?.email}`);
+  return res.status(403).json({ error: "Admin only access" });
+};

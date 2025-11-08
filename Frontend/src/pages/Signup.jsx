@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Signup = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -18,59 +25,64 @@ const Signup = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Handle signup
+  // ✅ Handle signup (Firebase only)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // 🔹 Create user in Firebase
+      const { email, password, name } = formData;
+
+      // 🔹 Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        formData.email,
-        formData.password
+        email,
+        password
       );
 
       const user = userCredential.user;
 
-      // 🔹 Add display name in Firebase
+      // 🔹 Set display name
       await updateProfile(user, {
-        displayName: formData.name,
+        displayName: name,
       });
 
-      // 🔹 Send user data to backend (MongoDB)
-      await axios.post("http://localhost:5000/api/users/register", {
-        uid: user.uid,
-        name: formData.name,
-        email: formData.email,
-      });
-
-      // 🔹 Immediately sign out after signup
+      // 🔹 Optional: Force user to log out after registration
       await signOut(auth);
 
-      toast.success("Account created successfully! Please login to continue.");
+      toast.success("🎉 Account created successfully! Please login to continue.");
       navigate("/login");
     } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || error.message || "Something went wrong!");
+      console.error("Signup error:", error);
+      let message = "Something went wrong!";
+      if (error.code === "auth/email-already-in-use")
+        message = "This email is already registered.";
+      else if (error.code === "auth/invalid-email")
+        message = "Invalid email address.";
+      else if (error.code === "auth/weak-password")
+        message = "Password should be at least 6 characters.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-center items-center text-white px-6">
-      <div className="bg-black border border-gray-800 rounded-2xl shadow-xl p-10 w-full max-w-md">
-        {/* Logo / Title */}
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-gray-950 flex flex-col justify-center items-center text-white px-6">
+      <div className="bg-gray-950 border border-gray-800 rounded-2xl shadow-xl p-10 w-full max-w-md">
+        {/* Title Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-full mb-4"></div>
-          <h1 className="text-4xl font-bold tracking-wide text-center">Create Account</h1>
+          <h1 className="text-4xl font-bold tracking-wide text-center">
+            Create Account
+          </h1>
           <p className="text-gray-400 mt-2 text-center">
-            Join EventFlow and experience amazing events.
+            Join <span className="text-purple-400 font-semibold">EventFlow</span>{" "}
+            and experience amazing events.
           </p>
         </div>
 
-        {/* Form */}
+        {/* Signup Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-semibold mb-2">Full Name</label>
@@ -80,6 +92,7 @@ const Signup = () => {
               value={formData.name}
               onChange={handleChange}
               required
+              placeholder="Enter your full name"
               className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
             />
           </div>
@@ -92,6 +105,7 @@ const Signup = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              placeholder="Enter your email"
               className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
             />
           </div>
@@ -105,6 +119,7 @@ const Signup = () => {
               onChange={handleChange}
               required
               minLength={6}
+              placeholder="Enter password"
               className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 pr-10"
             />
             <button
@@ -119,22 +134,18 @@ const Signup = () => {
           <button
             type="submit"
             disabled={loading}
-            className="btn-gradient w-full py-3 text-lg font-semibold rounded-full flex justify-center items-center space-x-2 transition-transform duration-200 hover:scale-[1.02]"
+            className="w-full py-3 text-lg font-semibold rounded-full flex justify-center items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-[1.02] transition-transform duration-200 shadow-lg"
           >
-            {loading ? (
-              <span>Creating Account...</span>
-            ) : (
-              <>
-                <span>Sign Up</span>
-                <ArrowRight size={20} />
-              </>
-            )}
+            {loading ? "Creating Account..." : <>Sign Up <ArrowRight size={20} /></>}
           </button>
         </form>
 
         <p className="text-gray-400 text-center mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="text-purple-400 hover:underline font-medium">
+          <Link
+            to="/login"
+            className="text-purple-400 hover:underline font-medium"
+          >
             Log in
           </Link>
         </p>

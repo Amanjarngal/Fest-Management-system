@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const ParticipantSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -9,4 +9,5 @@ const ParticipantSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Participant", ParticipantSchema);
+const Participant = mongoose.model("Participant", ParticipantSchema);
+export default Participant;

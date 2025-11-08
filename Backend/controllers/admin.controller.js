@@ -1,7 +1,7 @@
-const { auth } = require("../config/firebase"); // your Firebase admin instance
+import { auth } from "../config/firebase.js";
 
 // 1️⃣ Make a user an admin
-const makeAdmin = async (req, res) => {
+export const makeAdmin = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
@@ -13,12 +13,16 @@ const makeAdmin = async (req, res) => {
     res.json({ message: `Admin role successfully granted to ${email}` });
   } catch (err) {
     console.error("Error in makeAdmin:", err);
-    res.status(500).json({ error: "Failed to make user admin", details: err.message });
+    res.status(500).json({
+      error: "Failed to make user admin",
+      details: err.message,
+    });
   }
 };
 
+
 // 2️⃣ Get all users with admin role
-const getAdmins = async (req, res) => {
+export const getAdmins = async (req, res) => {
   try {
     let users = [];
     let nextPageToken;
@@ -39,12 +43,16 @@ const getAdmins = async (req, res) => {
     res.json({ admins: users });
   } catch (err) {
     console.error("Error in getAdmins:", err);
-    res.status(500).json({ error: "Failed to fetch admins", details: err.message });
+    res.status(500).json({
+      error: "Failed to fetch admins",
+      details: err.message,
+    });
   }
 };
 
+
 // 3️⃣ Remove admin access
-const removeAdmin = async (req, res) => {
+export const removeAdmin = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
@@ -60,4 +68,4 @@ const removeAdmin = async (req, res) => {
   }
 };
 
-module.exports = { makeAdmin, getAdmins, removeAdmin };
+

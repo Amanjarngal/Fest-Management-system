@@ -7,6 +7,13 @@ import ShareMoment from "../components/gallery components/ShareMoment";
 
 const Gallery = () => {
   
+    useEffect(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth", // or "auto" if you want instant scroll
+      });
+    }, []);
+  
   return (
    <>
    <HeroSection/>

@@ -1,4 +1,4 @@
-import Participant from "../models/Participant.js";
+import  Participant  from "../models/Participant.js";
 import Config from "../models/Config.js";
 
 // 🧑‍💻 Admin: Toggle leaderboard live status manually

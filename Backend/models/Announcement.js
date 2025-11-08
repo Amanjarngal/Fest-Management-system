@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const announcementSchema = new mongoose.Schema(
   {
@@ -20,4 +20,4 @@ const announcementSchema = new mongoose.Schema(
   { timestamps: true } // adds createdAt, updatedAt
 );
 
-module.exports = mongoose.model("Announcement", announcementSchema);
+export default mongoose.model("Announcement", announcementSchema);
