@@ -95,68 +95,69 @@ const deleteItem = async (pricingId) => {
     0
   );
 
-// 💳 Razorpay Checkout
 const handleCheckout = async () => {
   if (!user) return alert("Please login first!");
 
   try {
-    // Step 1️⃣: Create Razorpay order from backend
-    const { data } = await axios.post(`${BACKEND_URI}/api/bookings/create-order`, {
-      userId: user.uid,
-    });
+    const { data } = await axios.post(
+      `${BACKEND_URI}/api/razorpay/events/create-order`,
+      { amount: totalPrice }
+    );
 
-    // Step 2️⃣: Configure Razorpay payment options
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: data.amount * 100,
-      currency: data.currency,
-      name: "Event Ticket Booking",
-      description: "Secure ticket booking via Razorpay",
-      image: "/logo.png", // optional
-      order_id: data.orderId,
-      handler: async function (response) {
-        try {
-          // Step 3️⃣: Verify payment and create booking in backend
-          const verifyRes = await axios.post(`${BACKEND_URI}/api/bookings/verify`, {
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            userId: user.uid,
-          });
+      amount: data.order.amount,
+      currency: "INR",
+      name: "College Fest",
+      description: "Payment for your ticket cart",
+      order_id: data.order.id,
+      handler: async (response) => {
+  await axios.post(`${BACKEND_URI}/api/razorpay/events/verify-payment`, {
+    uid: user.uid,
+    amount: totalPrice,
+    items: cartItems.map(item => ({
+      eventId: item.pricingId.event._id,
+      pricingId: item.pricingId._id,
+      quantity: item.quantity,
+      price: item.pricingId.finalPrice || item.pricingId.price,
+    })),
+    razorpay_order_id: response.razorpay_order_id,
+    razorpay_payment_id: response.razorpay_payment_id,
+    razorpay_signature: response.razorpay_signature,
+  });
 
-          if (verifyRes.data.success) {
-            alert("🎟️ Booking confirmed successfully!");
-            navigate("/myBookings");
-          } else {
-            alert("❌ Payment verification failed");
-          }
-        } catch (err) {
-          console.error("Error verifying payment:", err);
-          alert("Something went wrong verifying the payment.");
-        }
-      },
+  // ✅ Clear local cart immediately
+  setCartItems([]);
+
+  alert("🎉 Payment successful!");
+  navigate("/success");
+},
+
       prefill: {
-        name: user.displayName || "Guest User",
+        name: user.displayName || "Fest Attendee",
         email: user.email,
         contact: "9999999999",
       },
-      theme: {
-        color: "#c026d3",
-      },
+      theme: { color: "#ec4899" },
     };
 
-    const razor = new window.Razorpay(options);
-    razor.open();
-
-    razor.on("payment.failed", function (response) {
-      alert("❌ Payment failed. Try again.");
-      console.error(response.error);
-    });
+    new window.Razorpay(options).open();
   } catch (err) {
-    console.error("Error during checkout:", err);
+    console.error("❌ Error during Razorpay checkout:", err);
     alert("Something went wrong during checkout.");
   }
 };
+
+
+useEffect(() => {
+  const script = document.createElement("script");
+  script.src = "https://checkout.razorpay.com/v1/checkout.js";
+  script.async = true;
+  document.body.appendChild(script);
+}, []);
+
+
+
 
 
   // 🔒 Show message if user not logged in

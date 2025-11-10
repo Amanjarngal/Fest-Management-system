@@ -31,6 +31,9 @@ import Stalls from "./pages/Dashboard/Stalls";
 import PublicRoute from "./context/PublicRoute";
 import StallDetails from "./pages/StallDetails";
 import StallsList from "./pages/StallsList";
+import MyAccount from "./pages/MyAccount";
+import SuccessPage from "./components/Payment comp/SuccessPage";
+import CancelPage from "./components/Payment comp/CancelPage";
 
 function AppContent() {
   const location = useLocation();
@@ -68,7 +71,9 @@ function AppContent() {
         <Route path="/stalls" element={
           <ProtectedRoute> <StallsList /> </ProtectedRoute> 
           } />
+
           <Route path="/stall/:id" element={<StallDetails />} />
+
         <Route
           path="/voting"
           element={<ProtectedRoute><VotingZone /></ProtectedRoute>}
@@ -76,10 +81,13 @@ function AppContent() {
 
         <Route path='/login' element= {<PublicRoute> <Login /> </PublicRoute>   } />
         <Route path='/signup' element={  <PublicRoute><Signup /> </PublicRoute>} />
+        <Route path="/account" element={<MyAccount />} />
         <Route path='/gallery' element={<Gallery />} />
         <Route path='/eventSchedules' element={<EventSchedule />} />
         <Route path='/pricing/:eventId' element={<PricingPage />} />
         <Route path='/cart' element={<CartPage />} />
+        <Route path="/success" element={<SuccessPage />} />
+        <Route path="/cancel" element={<CancelPage />} />
 
         <Route path='*' element={ <NotFound /> } />
 

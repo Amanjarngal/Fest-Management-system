@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { MapPin, QrCode, Loader2, Camera, X } from "lucide-react";
+import { MapPin, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import { QrReader } from "react-qr-reader"; // ✅ new library
+import { QrReader } from "react-qr-reader";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -114,13 +114,19 @@ const StallsList = () => {
               to={`/stall/${stall._id}`}
               className="bg-gray-900 border border-gray-800 p-6 rounded-xl shadow-md hover:shadow-yellow-500/20 hover:-translate-y-1 transition-all block"
             >
-              {stall.qrCodeDataUrl && (
+              {/* ✅ Show Stall Image instead of QR */}
+              {stall.imageUrl ? (
                 <img
-                  src={stall.qrCodeDataUrl}
-                  alt="Stall QR"
-                  className="w-32 h-32 mx-auto mb-4 rounded-lg border border-gray-700"
+                  src={stall.imageUrl}
+                  alt={stall.name}
+                  className="w-full h-48 object-cover rounded-lg mb-4 border border-gray-700"
                 />
+              ) : (
+                <div className="w-full h-48 bg-gray-800 flex items-center justify-center rounded-lg mb-4 border border-gray-700 text-gray-500">
+                  <ImageIcon size={32} className="opacity-50" />
+                </div>
               )}
+
               <h2 className="text-xl font-semibold text-yellow-400 text-center mb-2">
                 {stall.name}
               </h2>

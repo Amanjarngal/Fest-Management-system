@@ -1,62 +1,261 @@
 import Stall from "../models/Stall.js";
 import QRCode from "qrcode";
-import { auth } from "../config/firebase.js"; // Firebase admin instance
-import User from "../models/User.js"; // Make sure your User model is imported
-// import { sendTokenEmail } from "../config/emailConfig.js";
+import { auth } from "../config/firebase.js";
+import User from "../models/User.js";
+import cloudinary from "../config/cloudinary.js"; // ✅ for deleting or managing images
 
-/* ------------------ CREATE STALL (Admin Only) ------------------ */
+/* ------------------ CREATE STALL (Admin Only — Existing Owner Only) ------------------ */
 export const createStall = async (req, res, next) => {
   try {
-    const { name, ownerUID, ownerName, email } = req.body;
+    const { name, email, ownerName, category, location, description } = req.body;
 
-    if (!name || !ownerUID || !email) {
+    if (!name || !email) {
       return res
         .status(400)
-        .json({ message: "Stall name, ownerUID, and email are required." });
+        .json({ message: "Stall name and owner email are required." });
     }
 
-    // ✅ Step 1: Create Stall
-    const stall = new Stall(req.body);
-    await stall.save();
+    // ✅ Check if the user exists in Firebase
+    let firebaseUser;
+    try {
+      firebaseUser = await auth.getUserByEmail(email);
+      console.log(`✅ Found existing Firebase user for ${email}`);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: `User with email ${email} not found. Ask them to sign up first.`,
+      });
+    }
 
-    // ✅ Step 2: Generate QR Link
+    // ✅ Assign stallOwner role
+    await auth.setCustomUserClaims(firebaseUser.uid, { role: "stallOwner" });
+
+    // ✅ Update user in MongoDB
+    await User.findOneAndUpdate(
+      { email },
+      {
+        name: ownerName || firebaseUser.displayName || "Stall Owner",
+        role: "stallOwner",
+        uid: firebaseUser.uid,
+      },
+      { new: true }
+    );
+
+    // ✅ Handle image upload (from multer)
+    const imageUrl = req.file?.path || "";
+
+    // ✅ Create stall
+    const stall = await Stall.create({
+      name,
+      ownerUID: firebaseUser.uid,
+      ownerName: ownerName || firebaseUser.displayName || "Stall Owner",
+      ownerEmail: email,
+      category: category || "",
+      location: location || "",
+      description: description || "",
+      imageUrl, // ✅ Cloudinary image URL
+    });
+
+    // ✅ Generate QR code for this stall
     const qrLink = `${process.env.FRONTEND_URL}/stall/${stall._id}`;
     stall.qrCodeDataUrl = await QRCode.toDataURL(qrLink);
     await stall.save();
 
-    // ✅ Step 3: Assign Stall Owner Role in Firebase
-    try {
-      await auth.setCustomUserClaims(ownerUID, { role: "stallOwner" });
-      console.log(`✅ Firebase: Assigned 'stallOwner' role to UID: ${ownerUID}`);
-    } catch (err) {
-      console.error("⚠️ Error setting Firebase custom claims:", err.message);
-    }
-
-    // ✅ Step 4: Assign Role in Database
-    try {
-      const user = await User.findOneAndUpdate(
-        { email },
-        { role: "stallOwner" },
-        { new: true }
-      );
-
-      if (user) {
-        console.log(`✅ MongoDB: Role updated to 'stallOwner' for ${email}`);
-      } else {
-        console.warn(`⚠️ No user found with email: ${email}`);
-      }
-    } catch (err) {
-      console.error("⚠️ Error updating user role in database:", err.message);
-    }
-
-    // ✅ Step 5: Send Response
     res.status(201).json({
       success: true,
-      message: `🧩 Stall created successfully and ${ownerName} is now a Stall Owner.`,
+      message: `🎪 Stall '${name}' created successfully with image.`,
       stall,
     });
   } catch (error) {
     console.error("❌ Error in createStall:", error.message);
+    next(error);
+  }
+};
+
+/* ------------------ UPDATE STALL (Admin — Reassign Owner if Changed, Existing User Only) ------------------ */
+export const updateStall = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, category, location, description, ownerName, ownerEmail } = req.body;
+
+    console.log("🛠️ Incoming Update:", req.body);
+    const stall = await Stall.findById(id);
+    if (!stall) return res.status(404).json({ message: "Stall not found" });
+
+    const oldOwnerEmail = stall.ownerEmail;
+    const ownerChanged = ownerEmail && ownerEmail !== oldOwnerEmail;
+
+    // ✅ Handle owner change
+    if (ownerChanged) {
+      console.log(`🔄 Changing owner from ${oldOwnerEmail} → ${ownerEmail}`);
+
+      // Demote old owner
+      try {
+        const oldUserRecord = await auth.getUserByEmail(oldOwnerEmail);
+        await auth.setCustomUserClaims(oldUserRecord.uid, { role: "user" });
+      } catch (err) {
+        console.warn(`⚠️ Old owner ${oldOwnerEmail} not found in Firebase`);
+      }
+
+      await User.findOneAndUpdate({ email: oldOwnerEmail }, { role: "user" });
+
+      // Promote new owner (must exist)
+      let firebaseUser;
+      try {
+        firebaseUser = await auth.getUserByEmail(ownerEmail);
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: `User ${ownerEmail} must sign up before being assigned.`,
+        });
+      }
+
+      await auth.setCustomUserClaims(firebaseUser.uid, { role: "stallOwner" });
+
+      await User.findOneAndUpdate(
+        { email: ownerEmail },
+        {
+          name: ownerName || firebaseUser.displayName || "Stall Owner",
+          role: "stallOwner",
+          uid: firebaseUser.uid,
+        },
+        { upsert: true }
+      );
+
+      stall.ownerUID = firebaseUser.uid;
+      stall.ownerEmail = ownerEmail;
+      stall.ownerName = ownerName || firebaseUser.displayName || "Stall Owner";
+    }
+
+    // ✅ Handle image upload (optional new image)
+    if (req.file?.path) {
+      // Delete old image if present
+      if (stall.imageUrl) {
+        const publicId = stall.imageUrl.split("/").pop().split(".")[0];
+        try {
+          await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
+        } catch (err) {
+          console.warn("⚠️ Failed to delete old Cloudinary image:", err.message);
+        }
+      }
+      stall.imageUrl = req.file.path;
+    }
+
+    stall.name = name || stall.name;
+    stall.category = category || stall.category;
+    stall.location = location || stall.location;
+    stall.description = description || stall.description;
+
+    await stall.save();
+
+    res.status(200).json({
+      success: true,
+      message: ownerChanged
+        ? `✅ Stall updated & ownership transferred to ${ownerEmail}`
+        : "✅ Stall updated successfully",
+      stall,
+    });
+  } catch (error) {
+    console.error("❌ Error in updateStall:", error.message);
+    next(error);
+  }
+};
+
+/* ------------------ ADD MENU ITEM ------------------ */
+export const addItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, price, description } = req.body;
+
+    const stall = await Stall.findById(id);
+    if (!stall) return res.status(404).json({ message: "Stall not found" });
+
+    // Role check
+    if (req.user.role !== "admin" && req.user.uid !== stall.ownerUID) {
+      return res.status(403).json({ message: "Not authorized to modify this stall" });
+    }
+
+    // ✅ Uploaded image from multer
+    const imageUrl = req.file?.path || "";
+
+    stall.menu.push({ name, price, description, imageUrl });
+    await stall.save();
+
+    res.json({
+      success: true,
+      message: "Item added successfully with image",
+      menu: stall.menu,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ------------------ UPDATE MENU ITEM ------------------ */
+export const updateItem = async (req, res, next) => {
+  try {
+    const { id, itemId } = req.params;
+    const stall = await Stall.findById(id);
+    if (!stall) return res.status(404).json({ message: "Stall not found" });
+
+    const item = stall.menu.id(itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    // ✅ Delete old image if new one uploaded
+    if (req.file?.path) {
+      if (item.imageUrl) {
+        const publicId = item.imageUrl.split("/").pop().split(".")[0];
+        try {
+          await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
+        } catch (err) {
+          console.warn("⚠️ Failed to delete old item image:", err.message);
+        }
+      }
+      item.imageUrl = req.file.path;
+    }
+
+    item.name = req.body.name || item.name;
+    item.price = req.body.price || item.price;
+    item.description = req.body.description || item.description;
+
+    await stall.save();
+
+    res.json({
+      success: true,
+      message: "Item updated successfully",
+      item,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ------------------ DELETE ITEM ------------------ */
+export const deleteItem = async (req, res, next) => {
+  try {
+    const { id, itemId } = req.params;
+    const stall = await Stall.findById(id);
+    if (!stall) return res.status(404).json({ message: "Stall not found" });
+
+    const item = stall.menu.id(itemId);
+    if (item?.imageUrl) {
+      const publicId = item.imageUrl.split("/").pop().split(".")[0];
+      try {
+        await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
+      } catch (err) {
+        console.warn("⚠️ Failed to delete item image:", err.message);
+      }
+    }
+
+    stall.menu = stall.menu.filter((i) => i._id.toString() !== itemId);
+    await stall.save();
+
+    res.json({
+      success: true,
+      message: "Item deleted successfully",
+      menu: stall.menu,
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -87,13 +286,36 @@ export const deleteStall = async (req, res, next) => {
   try {
     const stall = await Stall.findByIdAndDelete(req.params.id);
     if (!stall) return res.status(404).json({ message: "Stall not found" });
-    res.json({ success: true, message: "Stall deleted" });
+
+    // ✅ Delete stall image
+    if (stall.imageUrl) {
+      const publicId = stall.imageUrl.split("/").pop().split(".")[0];
+      try {
+        await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
+      } catch (err) {
+        console.warn("⚠️ Failed to delete stall image:", err.message);
+      }
+    }
+
+    // ✅ Delete all item images
+    for (const item of stall.menu) {
+      if (item.imageUrl) {
+        const publicId = item.imageUrl.split("/").pop().split(".")[0];
+        try {
+          await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
+        } catch (err) {
+          console.warn("⚠️ Failed to delete item image:", err.message);
+        }
+      }
+    }
+
+    res.json({ success: true, message: "Stall and associated images deleted" });
   } catch (error) {
     next(error);
   }
 };
 
-/* ------------------ Generate Token with Visitor Info ------------------ */
+/* ------------------ GENERATE & RESET TOKENS ------------------ */
 export const generateToken = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -101,40 +323,26 @@ export const generateToken = async (req, res, next) => {
 
     const stall = await Stall.findById(id);
     if (!stall) return res.status(404).json({ message: "Stall not found" });
+    if (!visitorName || !mobile)
+      return res.status(400).json({ message: "Name & mobile are required" });
 
-    // Basic validation
-    if (!visitorName || !mobile) {
-      return res.status(400).json({ message: "Name and mobile number are required" });
-    }
-
-    // Increment token
     stall.currentToken += 1;
     const newToken = stall.currentToken;
-
-    // Save visitor info
     stall.tokens.push({ tokenNumber: newToken, visitorName, mobile, email });
     await stall.save();
 
-    // Send confirmation email (if provided)
-    // if (email) {
-    //   await sendTokenEmail(email, stall.name, newToken);
-    // }
-
     res.json({
       success: true,
-      stallName: stall.name,
+      message: `🎟️ Token #${newToken} generated successfully`,
       tokenNumber: newToken,
       visitorName,
       mobile,
-      email,
-      message: `🎟️ Token #${newToken} generated successfully for ${visitorName}`,
     });
   } catch (error) {
     next(error);
   }
 };
 
-/* ------------------ RESET TOKENS ------------------ */
 export const resetTokens = async (req, res, next) => {
   try {
     const stall = await Stall.findById(req.params.id);
@@ -150,81 +358,29 @@ export const resetTokens = async (req, res, next) => {
   }
 };
 
-/* ------------------ ADD ITEM ------------------ */
-export const addItem = async (req, res, next) => {
+/* ------------------ GET MY STALLS ------------------ */
+export const getMyStalls = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { name, price, description, imageUrl } = req.body;
-    const stall = await Stall.findById(id);
-    if (!stall) return res.status(404).json({ message: "Stall not found" });
+    const { uid, role } = req.user;
 
-    // 🔒 Role-based check
-    if (
-      req.user.role !== "admin" &&
-      req.user.uid !== stall.ownerUID
-    ) {
-      return res.status(403).json({ message: "Not authorized to modify this stall" });
+    if (role === "admin") {
+      const allStalls = await Stall.find().sort({ createdAt: -1 });
+      return res.json({ success: true, role, stalls: allStalls });
     }
 
-    stall.menu.push({ name, price, description, imageUrl });
-    await stall.save();
+    if (role === "stallOwner") {
+      const myStalls = await Stall.find({ ownerUID: uid }).sort({ createdAt: -1 });
+      return res.json({
+        success: true,
+        role,
+        stalls: myStalls,
+      });
+    }
 
-    res.json({
-      success: true,
-      message: "Item added successfully",
-      menu: stall.menu,
+    res.status(403).json({
+      success: false,
+      message: "Unauthorized to view stalls",
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-
-/* ------------------ DELETE ITEM ------------------ */
-export const deleteItem = async (req, res, next) => {
-  try {
-    const { id, itemId } = req.params;
-    const stall = await Stall.findById(id);
-    if (!stall) return res.status(404).json({ message: "Stall not found" });
-
-    stall.menu = stall.menu.filter((i) => i._id.toString() !== itemId);
-    await stall.save();
-
-    res.json({ success: true, message: "Item deleted successfully", menu: stall.menu });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/* ------------------ UPDATE ITEM ------------------ */
-export const updateItem = async (req, res, next) => {
-  try {
-    const { id, itemId } = req.params;
-    const stall = await Stall.findById(id);
-    if (!stall) return res.status(404).json({ message: "Stall not found" });
-
-    const item = stall.menu.id(itemId);
-    if (!item) return res.status(404).json({ message: "Item not found" });
-
-    Object.assign(item, req.body);
-    await stall.save();
-
-    res.json({ success: true, message: "Item updated successfully", item });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/* ------------------ UPDATE STALL ------------------ */
-export const updateStall = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    const stall = await Stall.findByIdAndUpdate(id, updates, { new: true });
-    if (!stall) return res.status(404).json({ message: "Stall not found" });
-
-    res.json({ success: true, message: "Stall updated successfully", stall });
   } catch (error) {
     next(error);
   }

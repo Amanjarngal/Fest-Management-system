@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mainRoutes from "./routes/main.routes.js";
+import cartRoutes from "./routes/cart.Routes.js";
 
 const app = express();
 
@@ -25,5 +26,7 @@ app.get("/", (req, res) => {
 
 // ✅ API Routes
 app.use("/api", mainRoutes);
+// ✅ Mount cart routes directly
+app.use("/api/cart", cartRoutes);
 
 export default app;

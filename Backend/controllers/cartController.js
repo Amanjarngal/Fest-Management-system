@@ -1,9 +1,8 @@
 import Cart from "../models/Cart.js";
 import Pricing from "../models/Pricing.js";
-import User from "../models/User.js";
 
 /**
- * Add ticket to cart (multi-event support)
+ * Add ticket to cart (Firebase UID-based)
  */
 export const addToCart = async (req, res) => {
   try {
@@ -12,11 +11,6 @@ export const addToCart = async (req, res) => {
     if (!uid || !eventId || !pricingId)
       return res.status(400).json({ error: "Missing required fields" });
 
-    // 🔹 Find user by Firebase UID
-    const user = await User.findOne({ uid });
-    if (!user)
-      return res.status(404).json({ error: "User not found in database" });
-
     // 🔹 Find pricing details
     const pricing = await Pricing.findById(pricingId).populate("event");
     if (!pricing)
@@ -24,26 +18,24 @@ export const addToCart = async (req, res) => {
 
     const price = pricing.finalPrice || pricing.price;
 
-    // 🔹 Find or create a user cart
-    let cart = await Cart.findOne({ userId: user._id });
+    // 🔹 Find or create a cart for this Firebase UID
+    let cart = await Cart.findOne({ uid });
     if (!cart) {
-      cart = new Cart({ userId: user._id, items: [], totalPrice: 0 });
+      cart = new Cart({ uid, eventId, items: [], totalPrice: 0 });
     }
 
-    // 🔹 Check if this specific event + ticket type exists
+    // 🔹 Check if this ticket already exists
     const existingItem = cart.items.find(
-      (i) =>
-        i.pricingId.toString() === pricingId &&
-        i.eventId.toString() === eventId
+      (i) => i.pricingId.toString() === pricingId
     );
 
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
-      cart.items.push({ eventId, pricingId, quantity });
+      cart.items.push({ pricingId, quantity });
     }
 
-    // 🔹 Recalculate total cart price
+    // 🔹 Recalculate total
     const pricingDocs = await Pricing.find({
       _id: { $in: cart.items.map((i) => i.pricingId) },
     });
@@ -70,18 +62,13 @@ export const addToCart = async (req, res) => {
  */
 export const updateCartItem = async (req, res) => {
   try {
-    const { uid, pricingId, action } = req.body; // ✅ FIXED: using uid
+    const { uid, pricingId, action } = req.body;
 
     if (!uid || !pricingId || !action) {
       return res.status(400).json({ error: "uid, pricingId, and action are required" });
     }
 
-    // 🔍 Find user by Firebase UID
-    const user = await User.findOne({ uid });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    // 🛒 Find cart
-    const cart = await Cart.findOne({ userId: user._id }).populate("items.pricingId");
+    const cart = await Cart.findOne({ uid }).populate("items.pricingId");
     if (!cart) return res.status(404).json({ error: "Cart not found" });
 
     const item = cart.items.find(i => i.pricingId._id.toString() === pricingId);
@@ -109,35 +96,27 @@ export const updateCartItem = async (req, res) => {
   }
 };
 
+/**
+ * Delete cart item
+ */
 export const deleteCartItem = async (req, res) => {
   try {
-    console.log("🗑 Delete Request Body:", req.body); // ✅ Debug log
-
     const { uid, pricingId } = req.body;
-    if (!uid || !pricingId) {
+    if (!uid || !pricingId)
       return res.status(400).json({ error: "uid and pricingId are required" });
-    }
 
-    // 🔍 Find user by Firebase UID
-    const user = await User.findOne({ uid });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    // 🛒 Find cart and populate for price access
-    const cart = await Cart.findOne({ userId: user._id }).populate("items.pricingId");
+    const cart = await Cart.findOne({ uid }).populate("items.pricingId");
     if (!cart) return res.status(404).json({ error: "Cart not found" });
 
-    // 🗑 Remove item
     const beforeCount = cart.items.length;
     cart.items = cart.items.filter(
       (i) => i.pricingId && i.pricingId._id.toString() !== pricingId
     );
     const afterCount = cart.items.length;
 
-    if (beforeCount === afterCount) {
+    if (beforeCount === afterCount)
       return res.status(404).json({ error: "Item not found in cart" });
-    }
 
-    // 💰 Recalculate total safely
     cart.totalPrice = cart.items.reduce((sum, i) => {
       const price = i.pricingId?.finalPrice || i.pricingId?.price || 0;
       return sum + i.quantity * price;
@@ -145,7 +124,6 @@ export const deleteCartItem = async (req, res) => {
 
     await cart.save();
 
-    console.log("✅ Item deleted successfully for user:", user.uid);
     res.status(200).json({ message: "Item deleted successfully", cart });
   } catch (err) {
     console.error("❌ Error deleting item:", err);
@@ -153,22 +131,16 @@ export const deleteCartItem = async (req, res) => {
   }
 };
 
-
 /**
- * Get user's cart
+ * Get user's cart by Firebase UID
  */
 export const getCart = async (req, res) => {
   try {
     const { uid } = req.params;
-
     if (!uid)
       return res.status(400).json({ error: "Firebase UID is required" });
 
-    const user = await User.findOne({ uid });
-    if (!user)
-      return res.status(404).json({ error: "User not found in database" });
-
-    const cart = await Cart.findOne({ userId: user._id })
+    const cart = await Cart.findOne({ uid })
       .populate({
         path: "items.pricingId",
         populate: {
@@ -176,8 +148,7 @@ export const getCart = async (req, res) => {
           model: "Event",
           select: "title date location imageUrl",
         },
-      })
-      .populate("userId", "name email");
+      });
 
     if (!cart)
       return res.status(200).json({
@@ -189,7 +160,7 @@ export const getCart = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      user: { id: user._id, name: user.name, email: user.email },
+      uid,
       items: cart.items,
       totalPrice: cart.totalPrice,
     });

@@ -1,11 +1,19 @@
 import express from "express";
-import { createBookingOrder, getAllBookings, getUserBookings, verifyPayment } from "../controllers/bookingController.js";
+import {
+  createPayPalOrder,
+  capturePayPalPayment,
+  getAllBookings,
+  getUserBookings,
+} from "../controllers/bookingController.js";
 
 const router = express.Router();
 
-router.post("/create-order", createBookingOrder);
-router.post("/verify-payment", verifyPayment);
+// 🧾 PayPal routes
+router.post("/create-order", createPayPalOrder);
+router.post("/capture-payment", capturePayPalPayment);
 
-router.get("/all", getAllBookings); // Admin view
-router.get("/user/:userId", getUserBookings); // User view
+// 🧾 Bookings data
+router.get("/all", getAllBookings);
+router.get("/user/:userId", getUserBookings);
+
 export default router;

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import toast, { Toaster } from "react-hot-toast"; // ✅ Import toast
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -43,6 +44,7 @@ const PricingSection = () => {
         setTiers(pricingRes.data);
       } catch (error) {
         console.error("Error fetching event pricing:", error);
+        toast.error("Failed to load event details");
       } finally {
         setLoading(false);
       }
@@ -51,39 +53,37 @@ const PricingSection = () => {
   }, [eventId]);
 
   // 🛒 Add to Cart Handler
-// 🛒 Add to Cart Handler
-const handlePurchase = async (tier) => {
-  try {
-    if (!user) {
-      alert("Please log in to continue!");
-      navigate("/login");
-      return;
+  const handlePurchase = async (tier) => {
+    try {
+      if (!user) {
+        toast.error("Please log in to continue!");
+        navigate("/login");
+        return;
+      }
+
+      const uid = user.uid;
+      const token = await user.getIdToken();
+
+      const cartItem = {
+        uid,
+        eventId,
+        pricingId: tier._id,
+        quantity: 1,
+      };
+
+      const res = await axios.post(`${BACKEND_URI}/api/cart/add`, cartItem, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success(`${tier.ticketType} Ticket added to cart successfully!`);
+        setTimeout(() => navigate("/cart"), 1200);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add ticket to cart. Please try again.");
     }
-
-    const uid = user.uid; // ✅ Backend expects 'uid', not 'firebaseUid'
-    const token = await user.getIdToken();
-
-    const cartItem = {
-      uid, // ✅ fixed here
-      eventId,
-      pricingId: tier._id,
-      quantity: 1,
-    };
-
-    const res = await axios.post(`${BACKEND_URI}/api/cart/add`, cartItem, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.status === 200 || res.status === 201) {
-      alert(`${tier.ticketType} Ticket added to cart successfully!`);
-      navigate("/cart");
-    }
-  } catch (error) {
-    console.error("Error adding to cart:", error);
-    alert("Failed to add ticket to cart. Please try again.");
-  }
-};
-
+  };
 
   // 🎨 Tier Icons & Colors
   const tierIcons = {
@@ -98,7 +98,6 @@ const handlePurchase = async (tier) => {
     BRONZE: "from-orange-500 via-orange-600 to-red-600",
   };
 
-  // 🧩 Facilities by Tier
   const tierBenefits = {
     GOLDEN: [
       "Access to all main stage events",
@@ -124,6 +123,8 @@ const handlePurchase = async (tier) => {
 
   return (
     <section className="bg-gradient-to-b from-black via-gray-900 to-gray-950 text-white py-20 px-6 min-h-screen">
+    
+
       {loading ? (
         <p className="text-center text-gray-400 text-lg animate-pulse">
           Loading event details...
@@ -131,7 +132,10 @@ const handlePurchase = async (tier) => {
       ) : (
         <>
           {/* 🎟️ Event Header */}
-          <div className="max-w-4xl mx-auto text-center mb-14" data-aos="fade-up">
+          <div
+            className="max-w-4xl mx-auto text-center mb-14"
+            data-aos="fade-up"
+          >
             <h2 className="text-5xl font-extrabold mb-3">
               Ticket Pricing for{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
