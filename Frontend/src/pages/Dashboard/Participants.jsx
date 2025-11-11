@@ -163,12 +163,12 @@ const Participants = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-purple-950 text-white px-4 sm:px-6 py-6">
+    <div className="min-h-screen  text-white px-4 sm:px-6 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 flex-wrap">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center sm:text-left">
-            🏆 Manage Participants
+             Manage Participants
           </h1>
 
           <div className="flex flex-wrap justify-center gap-3">

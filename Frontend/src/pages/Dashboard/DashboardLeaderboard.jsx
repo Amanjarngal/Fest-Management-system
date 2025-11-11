@@ -84,7 +84,7 @@ const DashboardLeaderboard = () => {
 
       {/* 🔧 Admin Controls */}
       <div className="p-6 bg-gray-900 rounded-xl shadow-lg mb-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Leaderboard Control</h1>
+        <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">Leaderboard Control</h1>
         <p className="mb-4">
           Current Status:{" "}
           <span className={isLive ? "text-green-400" : "text-red-400"}>

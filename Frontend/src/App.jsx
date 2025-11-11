@@ -34,6 +34,8 @@ import StallsList from "./pages/StallsList";
 import MyAccount from "./pages/MyAccount";
 import SuccessPage from "./components/Payment comp/SuccessPage";
 import CancelPage from "./components/Payment comp/CancelPage";
+import StallOrdersDashboard from "./pages/Dashboard/StallOrdersDashboard";
+import EventOrdersDashboard from "./pages/Dashboard/EventOrdersDashboard";
 
 function AppContent() {
   const location = useLocation();
@@ -107,11 +109,14 @@ function AppContent() {
           <Route path="participants" element={<Participants />} />
           <Route path="leaderboard" element={<DashboardLeaderboard />} />
           <Route path="events" element={<EventsDashboard />} />
+          <Route path="eventOrder" element={<EventOrdersDashboard />} />
           <Route path="pricingSet" element={<PricingDashboard />} />
           <Route path="performers" element={<PerformerDashboard />} />
           <Route path="feedback" element={<FeedbackDashboard />} />
           <Route path="announcement" element={<AnnouncementDashboard />} />
           <Route path="stalls" element={<Stalls />} />
+          <Route path="stallsOrder" element={<StallOrdersDashboard />} />
+
         </Route>
       </Routes>
 

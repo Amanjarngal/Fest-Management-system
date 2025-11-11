@@ -106,11 +106,11 @@ const ImagesPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-purple-950 text-white p-6">
+    <div className="min-h-screen  text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
-          🎨 Image Dashboard
+           Image Dashboard
         </h1>
 
         {/* Upload / Edit Form */}

@@ -16,6 +16,8 @@ import stallRoutes from "./stall.Routes.js"
 import stallCartRoutes from "./stallCart.Routes.js"
 import eventPaymentRoutes from "./eventPayment.Routes.js";
 import stallPaymentRoutes from "./stallPayment.Routes.js";
+import dashboardRoutes from "./dashboardRoutes.js";
+import firebaseRoutes from "./firebaseRoutes.js"
 const router = express.Router();
 
 // ✅ All sub-routes
@@ -38,6 +40,8 @@ router.use("/stalls", stallRoutes);
 router.use("/stallCart", stallCartRoutes)
 router.use("/razorpay/events", eventPaymentRoutes);
 router.use("/razorpay/stalls", stallPaymentRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/firebase", firebaseRoutes);
 
 
 export default router;

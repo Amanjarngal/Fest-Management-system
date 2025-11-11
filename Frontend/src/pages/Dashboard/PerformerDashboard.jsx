@@ -112,10 +112,10 @@ const PerformerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-4 sm:px-6 md:px-10 py-8 space-y-10">
+    <div className="min-h-screen  text-white px-4 sm:px-6 md:px-10 py-8 space-y-10">
       {/* Page Title */}
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-yellow-400">
-        🎤 Manage Performers
+      <h1 className="sm:text-3xl  mb-6 text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+        Manage Performers
       </h1>
 
       {/* Event Selector */}
@@ -143,7 +143,7 @@ const PerformerDashboard = () => {
           onSubmit={handleSubmit}
           className="space-y-6 bg-gray-900 p-5 sm:p-6 md:p-8 rounded-xl shadow-xl border border-gray-800"
         >
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2 text-yellow-400">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
             <PlusCircle className="text-yellow-400" />
             {editMode ? "Edit Performer" : "Add New Performer"}
           </h2>
@@ -184,7 +184,7 @@ const PerformerDashboard = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-all w-full sm:w-auto"
+            className="bg-gradient-to-r from-pink-400 to-purple-400  text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-all w-full sm:w-auto"
           >
             {loading
               ? "Uploading..."
@@ -197,7 +197,7 @@ const PerformerDashboard = () => {
 
       {/* Performer List */}
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">
+        <h2 className="text-2xl  bold sm:text-xl font-semibold mb-4 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
           Current Performers
         </h2>
 

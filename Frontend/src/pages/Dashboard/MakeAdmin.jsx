@@ -102,7 +102,7 @@ const MakeAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-purple-950 p-6 flex flex-col items-center text-white">
+    <div className="min-h-screen p-6 flex flex-col items-center text-white">
       
       {/* Grant Admin Form */}
       <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md mb-10 border border-gray-700">

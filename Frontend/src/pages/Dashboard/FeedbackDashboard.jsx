@@ -51,7 +51,7 @@ const FeedbackDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-purple-950 text-white p-4 sm:p-6">
+    <div className="min-h-screen  text-white p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

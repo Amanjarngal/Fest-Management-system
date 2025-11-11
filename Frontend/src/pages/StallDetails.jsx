@@ -79,21 +79,25 @@ const StallDetails = () => {
   }, [id]);
 
   // ✅ Fetch Cart
-  const fetchCart = async () => {
-    if (!user || !id) return;
-    try {
-      setCartLoading(true);
-      const token = await getFirebaseToken();
-      const res = await axios.get(`${BACKEND_URI}/api/stallCart/${user.uid}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart(res.data?.items || []);
-    } catch (err) {
-      console.error("Error loading cart:", err);
-    } finally {
-      setCartLoading(false);
-    }
-  };
+ const fetchCart = async () => {
+  if (!user || !id) return;
+  try {
+    setCartLoading(true);
+    const token = await getFirebaseToken();
+    const res = await axios.get(`${BACKEND_URI}/api/stallCart/${user.uid}/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const stallId = res.data?.stallId || id;
+    const items = res.data?.items || [];
+
+    setCart(items.map((item) => ({ ...item, stallId })));
+  } catch (err) {
+    console.error("Error loading cart:", err);
+  } finally {
+    setCartLoading(false);
+  }
+};
 
   useEffect(() => {
     if (uid) fetchCart();

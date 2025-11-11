@@ -10,7 +10,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { auth } from "../firebase";
-import { onAuthStateChanged, onIdTokenChanged, signOut } from "firebase/auth";
+import { getIdTokenResult,onAuthStateChanged, onIdTokenChanged, signOut } from "firebase/auth";
 import { io } from "socket.io-client";
 import AnnouncementModal from "../pages/AnnouncementModal";
 
@@ -22,6 +22,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [newCount, setNewCount] = useState(0);
+  const [role, setRole] = useState(null);
   const navigate = useNavigate();
 
   // ✅ Socket listener for announcements
@@ -51,6 +52,24 @@ const Navbar = () => {
     return () => unsubscribeToken();
   }, [navigate]);
 
+  useEffect(() => {
+  const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+    if (currentUser) {
+      const tokenResult = await getIdTokenResult(currentUser);
+      const userRole = tokenResult.claims.role || "user";
+      setUser(currentUser);
+      setRole(userRole);
+      localStorage.setItem("userRole", userRole);
+    } else {
+      setUser(null);
+      setRole(null);
+      localStorage.removeItem("userRole");
+      navigate("/login");
+    }
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
   // ✅ Manual logout
   const handleLogout = async () => {
     try {
@@ -133,39 +152,52 @@ const Navbar = () => {
                   <User size={25} className="text-purple-400" />
                 </button>
 
-                {accountDropdown && (
-                  <ul className="absolute right-0 bg-black border border-gray-800 rounded-lg shadow-lg w-44 text-base">
-                    {user ? (
-                      <>
-                        <li>
-                          <Link
-                            to="/account"
-                            className="block px-4 py-2 hover:bg-purple-900"
-                          >
-                            My Account
-                          </Link>
-                        </li>
-                        <li>
-                          <button
-                            onClick={handleLogout}
-                            className="w-full text-left px-4 py-2 hover:bg-purple-900 flex items-center"
-                          >
-                            <LogOut size={18} className="mr-2" /> Logout
-                          </button>
-                        </li>
-                      </>
-                    ) : (
-                      <li>
-                        <Link
-                          to="/login"
-                          className="block px-4 py-2 hover:bg-purple-900"
-                        >
-                          Login
-                        </Link>
-                      </li>
-                    )}
-                  </ul>
-                )}
+               {accountDropdown && (
+  <ul className="absolute right-0 bg-black border border-gray-800 rounded-lg shadow-lg w-44 text-base">
+    {user ? (
+      <>
+        {/* ✅ Only show if Firebase role = admin */}
+        {role === "admin" && (
+          <li>
+            <Link
+              to="/dashboard"
+              className="block px-4 py-2 hover:bg-purple-900"
+            >
+              Dashboard
+            </Link>
+          </li>
+        )}
+
+        <li>
+          <Link
+            to="/account"
+            className="block px-4 py-2 hover:bg-purple-900"
+          >
+            My Account
+          </Link>
+        </li>
+        <li>
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-4 py-2 hover:bg-purple-900 flex items-center"
+          >
+            <LogOut size={18} className="mr-2" /> Logout
+          </button>
+        </li>
+      </>
+    ) : (
+      <li>
+        <Link
+          to="/login"
+          className="block px-4 py-2 hover:bg-purple-900"
+        >
+          Login
+        </Link>
+      </li>
+    )}
+  </ul>
+)}
+
               </div>
 
               {/* Buy Ticket */}

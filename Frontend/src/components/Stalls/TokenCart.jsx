@@ -66,25 +66,25 @@ const handleStallPayment = async () => {
         try {
           // 🧾 Step 3️⃣: Verify payment + save stall order
           const verifyRes = await axios.post(
-            `${BACKEND_URI}/api/razorpay/stalls/verify-payment`,
-            {
-              uid: user.uid,
-              stallId: "default_stall",
-              items: cart.map((it) => ({
-                name: it.name,
-                price: it.price,
-                quantity: it.quantity,
-                total: it.price * it.quantity,
-              })),
-              totalAmount,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-            {
-              headers: { Authorization: `Bearer ${token}` }, // ✅ include token
-            }
-          );
+  `${BACKEND_URI}/api/razorpay/stalls/verify-payment`,
+  {
+    uid: user.uid,
+    stallId: cart[0]?.stallId, // ✅ use actual stallId from cart items
+    items: cart.map((it) => ({
+      itemId: it.itemId, // ✅ send correct itemId
+      quantity: it.quantity,
+      price: it.price,
+    })),
+    totalAmount,
+    razorpay_order_id: response.razorpay_order_id,
+    razorpay_payment_id: response.razorpay_payment_id,
+    razorpay_signature: response.razorpay_signature,
+  },
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
 
           if (verifyRes.data.success) {
             // ✅ Payment success

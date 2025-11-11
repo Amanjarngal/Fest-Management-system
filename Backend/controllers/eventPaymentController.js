@@ -3,6 +3,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import EventOrder from "../models/EventOrder.js";
 import Cart from "../models/Cart.js"; // ✅ Add this at the top
+import Event from "../models/Event.js";
 
 
 dotenv.config();
@@ -95,3 +96,129 @@ export const verifyEventPayment = async (req, res) => {
 
 
 
+
+  /**
+ * 📊 Get Event Orders by Event ID
+ * Shows total tickets sold and total revenue
+ */
+export const getEventOrders = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    if (!eventId) {
+      return res.status(400).json({ error: "eventId is required" });
+    }
+
+    // ✅ Fetch all orders for the given event
+    const orders = await EventOrder.find({ "items.eventId": eventId }).sort({
+      createdAt: -1,
+    });
+
+    if (!orders.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No orders found for this event.",
+        totalTickets: 0,
+        totalRevenue: 0,
+        orders: [],
+      });
+    }
+
+    // ✅ Calculate totals
+    const totalTickets = orders.reduce(
+      (sum, order) =>
+        sum +
+        order.items.reduce((acc, item) => acc + (item.quantity || 1), 0),
+      0
+    );
+
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + (order.amount || 0),
+      0
+    );
+
+    res.status(200).json({
+      success: true,
+      eventId,
+      totalTickets,
+      totalRevenue,
+      orderCount: orders.length,
+      orders,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching event orders:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 📊 Get All Event Orders (not per event)
+ * Returns detailed info about every order
+ */
+export const getAllEventOrders = async (req, res) => {
+  try {
+    // ✅ Fetch all orders, newest first
+    const orders = await EventOrder.find()
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "items.eventId",
+        model: Event,
+        select: "title price day date location",
+      })
+      .lean();
+
+    if (!orders.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No event orders found.",
+        totalTickets: 0,
+        totalRevenue: 0,
+        totalOrders: 0,
+        orders: [],
+      });
+    }
+
+    // ✅ Calculate totals
+    const totalTickets = orders.reduce(
+      (sum, order) =>
+        sum +
+        order.items.reduce((acc, item) => acc + (item.quantity || 1), 0),
+      0
+    );
+
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + (order.amount || 0),
+      0
+    );
+
+    // ✅ Prepare a detailed breakdown
+    const detailedOrders = orders.map((order) => ({
+      orderId: order._id,
+      userId: order.uid,
+      amount: order.amount,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt,
+      items: order.items.map((i) => ({
+        eventId: i.eventId?._id,
+        title: i.eventId?.title || "Unknown Event",
+        date: i.eventId?.date || "N/A",
+        location: i.eventId?.location || "N/A",
+        quantity: i.quantity,
+        price: i.price || 0,
+        subtotal: (i.price || 0) * (i.quantity || 1),
+      })),
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "All event orders fetched successfully",
+      totalOrders: orders.length,
+      totalTickets,
+      totalRevenue,
+      orders: detailedOrders,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching all event orders:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

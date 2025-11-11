@@ -21,21 +21,19 @@ const OfferModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-md relative border border-gray-700 shadow-lg">
+      <div className="bg-gray-950 rounded-2xl p-6 w-full max-w-md relative border border-gray-800 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white"
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
         >
           <X size={20} />
         </button>
-        <h2 className="text-2xl font-semibold text-yellow-400 mb-4">
+        <h2 className="text-2xl font-semibold bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent mb-4">
           🎁 Apply Offer
         </h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">
-              Discount Percentage:
-            </label>
+            <label className="block text-sm text-gray-400 mb-1">Discount Percentage:</label>
             <input
               type="number"
               min="1"
@@ -43,14 +41,12 @@ const OfferModal = ({ isOpen, onClose, onSubmit }) => {
               value={offerPercentage}
               onChange={(e) => setOfferPercentage(e.target.value)}
               placeholder="e.g., 20"
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">
-              Offer Expiry (in days):
-            </label>
+            <label className="block text-sm text-gray-400 mb-1">Offer Expiry (in days):</label>
             <input
               type="number"
               min="1"
@@ -58,13 +54,13 @@ const OfferModal = ({ isOpen, onClose, onSubmit }) => {
               value={expiryDays}
               onChange={(e) => setExpiryDays(e.target.value)}
               placeholder="e.g., 7"
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-semibold py-3 rounded-lg transition-all"
+            className="w-full bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 text-black font-semibold py-3 rounded-lg transition-all"
           >
             Apply Offer
           </button>
@@ -84,13 +80,11 @@ const PricingDashboard = () => {
     { ticketType: "BRONZE", price: "", totalTickets: "" },
   ]);
   const [existingPricings, setExistingPricings] = useState([]);
-
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [selectedPricingId, setSelectedPricingId] = useState(null);
   const [editMode, setEditMode] = useState(null);
   const [editData, setEditData] = useState({ price: "", totalTickets: "" });
 
-  // Fetch events
   useEffect(() => {
     axios
       .get(`${BACKEND_URI}/api/events`)
@@ -98,7 +92,6 @@ const PricingDashboard = () => {
       .catch(() => toast.error("❌ Failed to load events"));
   }, []);
 
-  // Fetch pricing for selected event
   useEffect(() => {
     if (selectedEvent) {
       axios
@@ -109,9 +102,9 @@ const PricingDashboard = () => {
   }, [selectedEvent]);
 
   const handleTierChange = (index, field, value) => {
-    const updatedTiers = [...tiers];
-    updatedTiers[index][field] = value;
-    setTiers(updatedTiers);
+    const updated = [...tiers];
+    updated[index][field] = value;
+    setTiers(updated);
   };
 
   const refreshPricing = async () => {
@@ -144,7 +137,7 @@ const PricingDashboard = () => {
     try {
       const res = await axios.put(`${BACKEND_URI}/api/pricing/offer/${selectedPricingId}`, {
         offerPercentage: percentage,
-        offerExpiry: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
+        offerExpiry: new Date(Date.now() + days * 86400000),
       });
       toast.success(res.data?.message || "✅ Offer applied successfully!");
       await refreshPricing();
@@ -153,9 +146,9 @@ const PricingDashboard = () => {
     }
   };
 
-  const handleEditSave = async (pricingId) => {
+  const handleEditSave = async (id) => {
     try {
-      const res = await axios.put(`${BACKEND_URI}/api/pricing/update/${pricingId}`, editData);
+      const res = await axios.put(`${BACKEND_URI}/api/pricing/update/${id}`, editData);
       toast.success(res.data?.message || "✅ Pricing updated successfully!");
       setEditMode(null);
       await refreshPricing();
@@ -164,9 +157,9 @@ const PricingDashboard = () => {
     }
   };
 
-  const handleRemoveOffer = async (pricingId) => {
+  const handleRemoveOffer = async (id) => {
     try {
-      const res = await axios.delete(`${BACKEND_URI}/api/pricing/offer/${pricingId}`);
+      const res = await axios.delete(`${BACKEND_URI}/api/pricing/offer/${id}`);
       toast.success(res.data?.message || "🗑️ Offer removed successfully!");
       await refreshPricing();
     } catch {
@@ -174,10 +167,10 @@ const PricingDashboard = () => {
     }
   };
 
-  const handleDeletePricing = async (pricingId) => {
+  const handleDeletePricing = async (id) => {
     if (!confirm("Are you sure you want to delete this pricing tier?")) return;
     try {
-      const res = await axios.delete(`${BACKEND_URI}/api/pricing/${pricingId}`);
+      const res = await axios.delete(`${BACKEND_URI}/api/pricing/${id}`);
       toast.success(res.data?.message || "🗑️ Pricing deleted successfully!");
       await refreshPricing();
     } catch {
@@ -186,161 +179,170 @@ const PricingDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-4 sm:px-8 md:px-16 py-8 space-y-10">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-yellow-400">
-        🎟️ Manage Ticket Pricing
-      </h1>
+    <div className="min-h-screen text-white px-6 py-10 ">
+      <div className="max-w-6xl mx-auto space-y-10">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+             Manage Ticket Pricing
+          </h1>
+        </div>
 
-      {/* Event Selector */}
-      <div className="mb-8">
-        <label className="block mb-2 text-gray-400 text-sm sm:text-base">Select Event:</label>
-        <select
-          value={selectedEvent}
-          onChange={(e) => setSelectedEvent(e.target.value)}
-          className="w-full sm:w-1/2 p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-yellow-500"
+        {/* Event Selector */}
+        <div className="bg-gray-950/70 border border-gray-800 rounded-xl p-6 shadow-md backdrop-blur-md">
+          <label className="block mb-2 text-gray-400 text-sm font-medium">
+            Select Event:
+          </label>
+          <select
+            value={selectedEvent}
+            onChange={(e) => setSelectedEvent(e.target.value)}
+            className="w-full sm:w-1/2 p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 transition"
+          >
+            <option value="">-- Choose an event --</option>
+            {events.map((e) => (
+              <option key={e._id} value={e._id}>
+                {e.title} ({e.date})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Add Pricing Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 bg-gray-950/80 border border-gray-800 rounded-xl p-8 shadow-lg backdrop-blur-sm"
         >
-          <option value="">-- Choose an event --</option>
-          {events.map((e) => (
-            <option key={e._id} value={e._id}>
-              {e.title} ({e.date})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Add Pricing Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-gray-900 p-5 sm:p-6 md:p-8 rounded-xl shadow-xl border border-gray-800"
-      >
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">
-          Add / Update Tier Pricing
-        </h2>
-        {tiers.map((tier, i) => (
-          <div key={tier.ticketType} className="grid sm:grid-cols-3 gap-4 sm:gap-6 items-center">
-            <div className="flex items-center gap-3">
-              <Tag className="text-yellow-400" />
-              <span className="font-medium">{tier.ticketType}</span>
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparentbg-clip-text text-transparent">
+            Add / Update Tier Pricing
+          </h2>
+          {tiers.map((tier, i) => (
+            <div
+              key={tier.ticketType}
+              className="grid sm:grid-cols-3 gap-4 items-center"
+            >
+              <div className="flex items-center gap-3">
+                <Tag className="text-yellow-400" />
+                <span className="font-medium">{tier.ticketType}</span>
+              </div>
+              <input
+                type="number"
+                placeholder="Ticket Price"
+                value={tier.price}
+                onChange={(e) => handleTierChange(i, "price", e.target.value)}
+                className="p-3 rounded-lg bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-purple-500 transition"
+              />
+              <input
+                type="number"
+                placeholder="Total Tickets"
+                value={tier.totalTickets}
+                onChange={(e) => handleTierChange(i, "totalTickets", e.target.value)}
+                className="p-3 rounded-lg bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-purple-500 transition"
+              />
             </div>
-            <input
-              type="number"
-              placeholder="Ticket Price"
-              value={tier.price}
-              onChange={(e) => handleTierChange(i, "price", e.target.value)}
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700"
-            />
-            <input
-              type="number"
-              placeholder="Total Tickets"
-              value={tier.totalTickets}
-              onChange={(e) => handleTierChange(i, "totalTickets", e.target.value)}
-              className="p-3 rounded-lg bg-gray-800 border border-gray-700"
-            />
-          </div>
-        ))}
-        <button
-          type="submit"
-          className="w-full sm:w-auto bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-all"
-        >
-          Save Pricing
-        </button>
-      </form>
+          ))}
+          <button
+            type="submit"
+            className="bg-purple-600 hover:bg-purple-700  text-white font-semibold py-3 px-6 rounded-lg hover:scale-105 transition-all"
+          >
+            Save Pricing
+          </button>
+        </form>
 
-      {/* Existing Pricings */}
-      <div>
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">
-          Current Pricing Tiers
-        </h2>
-        {existingPricings.length === 0 ? (
-          <p className="text-gray-500">No pricing tiers added yet.</p>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {existingPricings.map((p) => (
-              <div
-                key={p._id}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl hover:shadow-yellow-500/20 transition-all"
-              >
-                <h3 className="text-lg font-bold mb-2 text-yellow-400">{p.ticketType}</h3>
-                {editMode === p._id ? (
-                  <div className="space-y-3">
-                    <input
-                      type="number"
-                      value={editData.price}
-                      onChange={(e) => setEditData({ ...editData, price: e.target.value })}
-                      placeholder="New Price"
-                      className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    />
-                    <input
-                      type="number"
-                      value={editData.totalTickets}
-                      onChange={(e) => setEditData({ ...editData, totalTickets: e.target.value })}
-                      placeholder="New Total Tickets"
-                      className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    />
-                    <button
-                      onClick={() => handleEditSave(p._id)}
-                      className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg w-full"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <p>💰 Price: ₹{p.finalPrice}</p>
-                    <p>🎫 Available: {p.totalTickets - p.ticketsSold}</p>
-
-                    {p.offer?.active && (
-                      <p className="text-green-400 mt-2 text-sm">
-                        🔥 {p.offer.percentage}% off until{" "}
-                        {new Date(p.offer.expiry).toLocaleDateString()}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2 mt-4">
+        {/* Existing Pricings */}
+        <div>
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent mb-4">
+            Current Pricing Tiers
+          </h2>
+          {existingPricings.length === 0 ? (
+            <p className="text-gray-500">No pricing tiers added yet.</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {existingPricings.map((p) => (
+                <div
+                  key={p._id}
+                  className="bg-gray-950 border border-gray-800 rounded-xl p-6 shadow-lg hover:shadow-purple-500/20 transition-all"
+                >
+                  <h3 className="text-lg font-bold mb-2 text-yellow-400">{p.ticketType}</h3>
+                  {editMode === p._id ? (
+                    <div className="space-y-3">
+                      <input
+                        type="number"
+                        value={editData.price}
+                        onChange={(e) =>
+                          setEditData({ ...editData, price: e.target.value })
+                        }
+                        placeholder="New Price"
+                        className="w-full p-2 rounded bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-purple-500"
+                      />
+                      <input
+                        type="number"
+                        value={editData.totalTickets}
+                        onChange={(e) =>
+                          setEditData({ ...editData, totalTickets: e.target.value })
+                        }
+                        placeholder="New Total Tickets"
+                        className="w-full p-2 rounded bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-purple-500"
+                      />
                       <button
-                        onClick={() => {
-                          setSelectedPricingId(p._id);
-                          setShowOfferModal(true);
-                        }}
-                        className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        onClick={() => handleEditSave(p._id)}
+                        className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg w-full transition"
                       >
-                        <Percent size={16} /> Offer
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setEditMode(p._id);
-                          setEditData({ price: p.price, totalTickets: p.totalTickets });
-                        }}
-                        className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                      >
-                        <Edit size={16} /> Edit
-                      </button>
-
-                      {/* Show "Remove Offer" button only if offer is active */}
-                      {p.offer?.active && (
-                        <button
-                          onClick={() => handleRemoveOffer(p._id)}
-                          className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                        >
-                          <Trash2 size={16} /> Remove Offer
-                        </button>
-                      )}
-
-                      {/* New Delete Pricing button */}
-                      <button
-                        onClick={() => handleDeletePricing(p._id)}
-                        className="bg-red-700 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                      >
-                        <Trash2 size={16} /> Delete Pricing
+                        Save Changes
                       </button>
                     </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                  ) : (
+                    <>
+                      <p>💰 Price: ₹{p.finalPrice}</p>
+                      <p>🎫 Available: {p.totalTickets - p.ticketsSold}</p>
+                      {p.offer?.active && (
+                        <p className="text-green-400 mt-2 text-sm">
+                          🔥 {p.offer.percentage}% off until{" "}
+                          {new Date(p.offer.expiry).toLocaleDateString()}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <button
+                          onClick={() => {
+                            setSelectedPricingId(p._id);
+                            setShowOfferModal(true);
+                          }}
+                          className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        >
+                          <Percent size={16} /> Offer
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditMode(p._id);
+                            setEditData({
+                              price: p.price,
+                              totalTickets: p.totalTickets,
+                            });
+                          }}
+                          className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        >
+                          <Edit size={16} /> Edit
+                        </button>
+                        {p.offer?.active && (
+                          <button
+                            onClick={() => handleRemoveOffer(p._id)}
+                            className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
+                          >
+                            <Trash2 size={16} /> Remove Offer
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeletePricing(p._id)}
+                          className="bg-red-700 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Offer Modal */}

@@ -12,6 +12,7 @@ const stallOrderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
+    tokenNumber: { type: Number, required: true, unique: true },
     razorpay_order_id: { type: String, required: true },
     razorpay_payment_id: { type: String, required: true },
     razorpay_signature: { type: String, required: true },

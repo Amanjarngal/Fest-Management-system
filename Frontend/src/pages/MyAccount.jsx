@@ -225,7 +225,7 @@ const MyAccount = () => {
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Store /> {stall.name}
                 </h2>
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleGenerateToken(stall._id)}
                     className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center gap-2"
@@ -238,7 +238,7 @@ const MyAccount = () => {
                   >
                     <RefreshCcw size={18} /> Reset Tokens
                   </button>
-                </div>
+                </div> */}
               </div>
 
               {/* Add / Update Item Form */}

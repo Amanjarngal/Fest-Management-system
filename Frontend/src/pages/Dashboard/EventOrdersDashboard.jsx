@@ -1,0 +1,190 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Loader2, Ticket, Calendar, MapPin } from "lucide-react";
+import { getAuth } from "firebase/auth";
+import toast from "react-hot-toast";
+
+const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
+
+const EventOrdersDashboard = () => {
+  const [orders, setOrders] = useState([]);
+  const [summary, setSummary] = useState({
+    totalOrders: 0,
+    totalTickets: 0,
+    totalRevenue: 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const auth = getAuth();
+
+  // ✅ Fetch all event orders with ticket details
+  const fetchAllEventOrders = async () => {
+    try {
+      setLoading(true);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return toast.error("Please login as admin!");
+
+      const res = await axios.get(`${BACKEND_URI}/api/razorpay/events/all-orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        setOrders(res.data.orders || []);
+        setSummary({
+          totalOrders: res.data.totalOrders,
+          totalTickets: res.data.totalTickets,
+          totalRevenue: res.data.totalRevenue,
+        });
+      } else {
+        toast.error("No event orders found");
+      }
+    } catch (err) {
+      console.error("❌ Error fetching all event orders:", err);
+      toast.error("Failed to fetch event orders");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllEventOrders();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 text-white px-6 py-10">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            🎟️ All Event Orders & Ticket Summary
+          </h1>
+          <p className="text-gray-400 mt-2 text-sm">
+            View every order, ticket type, quantity, and total revenue in real-time
+          </p>
+        </div>
+
+        {/* Loading */}
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <div className="grid sm:grid-cols-3 gap-6 mb-10">
+              <SummaryCard title="Total Orders" value={summary.totalOrders} color="from-purple-600 to-pink-500" />
+              <SummaryCard title="Tickets Sold" value={summary.totalTickets} color="from-pink-500 to-yellow-400" />
+              <SummaryCard
+                title="Total Revenue"
+                value={`₹${summary.totalRevenue.toLocaleString()}`}
+                color="from-green-500 to-emerald-400"
+              />
+            </div>
+
+            {/* Orders Table */}
+            {orders.length === 0 ? (
+              <p className="text-gray-400 text-center mt-20 italic">
+                No event orders available yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-gray-800 shadow-2xl bg-gray-900/60 backdrop-blur-md">
+                <table className="min-w-full text-sm sm:text-base border-collapse">
+                  <thead className="bg-gradient-to-r from-purple-700/70 to-pink-700/70 text-gray-200 uppercase text-xs">
+                    <tr>
+                      <th className="p-3 border border-gray-800">#</th>
+                      <th className="p-3 border border-gray-800 text-left">User ID</th>
+                      <th className="p-3 border border-gray-800 text-left">Event & Tickets</th>
+                      <th className="p-3 border border-gray-800 text-center">Total Tickets</th>
+                      <th className="p-3 border border-gray-800 text-center">Total Amount</th>
+                      <th className="p-3 border border-gray-800 text-center">Payment Status</th>
+                      <th className="p-3 border border-gray-800 text-center">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order, index) => (
+                      <tr
+                        key={order.orderId}
+                        className={`hover:bg-purple-700/10 transition-all ${
+                          index % 2 === 0 ? "bg-gray-900/50" : "bg-gray-900/30"
+                        }`}
+                      >
+                        <td className="p-3 text-gray-400 border border-gray-800 text-center">{index + 1}</td>
+                        <td className="p-3 text-gray-300 border border-gray-800 text-xs">
+                          {order.userId ? `${order.userId.slice(0, 12)}...` : "Unknown"}
+                        </td>
+
+                        {/* 🟣 Event & Ticket Info */}
+                        <td className="p-3 border border-gray-800">
+                          {order.items.map((item, i) => (
+                            <div
+                              key={`${order.orderId}-${i}`}
+                              className="mb-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700 hover:border-purple-500 transition"
+                            >
+                              <h3 className="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <Ticket size={16} /> {item.title}
+                              </h3>
+                              <p className="text-gray-400 text-xs flex items-center gap-2 mt-1">
+                                <Calendar size={14} /> {item.date}{" "}
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={14} /> {item.location}
+                                </span>
+                              </p>
+                              <div className="flex justify-between items-center mt-2 text-sm text-gray-300">
+                                <span>🎫 Ticket Name: {item.ticketName || "General"}</span>
+                                <span>Qty: {item.quantity}</span>
+                                <span>₹{item.subtotal}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </td>
+
+                        {/* Total tickets */}
+                        <td className="p-3 border border-gray-800 text-center text-pink-400 font-semibold">
+                          {order.items.reduce((sum, i) => sum + (i.quantity || 1), 0)}
+                        </td>
+
+                        {/* Amount */}
+                        <td className="p-3 border border-gray-800 text-green-400 font-bold text-center">
+                          ₹{order.amount}
+                        </td>
+
+                        {/* Payment Status */}
+                        <td className="p-3 border border-gray-800 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              order.paymentStatus === "SUCCESS"
+                                ? "bg-green-600/20 text-green-400"
+                                : "bg-red-600/20 text-red-400"
+                            }`}
+                          >
+                            {order.paymentStatus}
+                          </span>
+                        </td>
+
+                        {/* Date */}
+                        <td className="p-3 border border-gray-800 text-gray-400 text-xs text-center">
+                          {new Date(order.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ✅ Reusable Summary Card Component
+const SummaryCard = ({ title, value, color }) => (
+  <div className={`bg-gradient-to-r ${color} p-[1px] rounded-2xl shadow-lg`}>
+    <div className="bg-gray-900 p-5 rounded-2xl h-full flex flex-col justify-between">
+      <h4 className="text-gray-300 text-sm">{title}</h4>
+      <p className="text-3xl font-bold text-white mt-2">{value}</p>
+    </div>
+  </div>
+);
+
+export default EventOrdersDashboard;

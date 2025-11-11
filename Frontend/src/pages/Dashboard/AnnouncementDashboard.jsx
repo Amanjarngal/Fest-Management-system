@@ -94,10 +94,10 @@ const AnnouncementDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-purple-950 text-white px-4 sm:px-6 md:px-10 py-8">
+    <div className="min-h-screen  text-white px-4 sm:px-6 md:px-10 py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center gap-2">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent  flex gap-2 ">
           <Megaphone className="text-yellow-400 w-7 h-7" />
           Manage Announcements
         </h1>
