@@ -30,12 +30,13 @@ import AnnouncementDashboard from "./pages/Dashboard/AnnouncementDashboard";
 import Stalls from "./pages/Dashboard/Stalls";
 import PublicRoute from "./context/PublicRoute";
 import StallDetails from "./pages/StallDetails";
-import StallsList from "./pages/StallsList";
+// import StallsList from "./pages/StallsList";
 import MyAccount from "./pages/MyAccount";
 import SuccessPage from "./components/Payment comp/SuccessPage";
 import CancelPage from "./components/Payment comp/CancelPage";
 import StallOrdersDashboard from "./pages/Dashboard/StallOrdersDashboard";
 import EventOrdersDashboard from "./pages/Dashboard/EventOrdersDashboard";
+import StallPage from "./pages/StallPage";
 
 function AppContent() {
   const location = useLocation();
@@ -71,7 +72,7 @@ function AppContent() {
 
         {/* protected routes */}
         <Route path="/stalls" element={
-          <ProtectedRoute> <StallsList /> </ProtectedRoute> 
+          <ProtectedRoute> <StallPage /> </ProtectedRoute> 
           } />
 
           <Route path="/stall/:id" element={<StallDetails />} />

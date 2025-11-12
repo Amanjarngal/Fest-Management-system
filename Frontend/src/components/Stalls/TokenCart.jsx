@@ -174,7 +174,7 @@ const handleStallPayment = async () => {
         </div>
         <button
           onClick={handleStallPayment}
-          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-2 rounded-md font-semibold"
+          className="w-full btn-gradient  text-black py-2 rounded-md font-semibold"
         >
           Proceed to Pay & Generate Token
         </button>

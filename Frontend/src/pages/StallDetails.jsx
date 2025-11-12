@@ -26,15 +26,16 @@ const StallDetails = () => {
   const [loading, setLoading] = useState(true);
   const [cartLoading, setCartLoading] = useState(false);
 
-  // Cart state
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
-
-  // Token Modal state
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [tokenNumber, setTokenNumber] = useState(null);
 
-  // ✅ Firebase user listener
+    // ✅ Always scroll to top on page load
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+    
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((u) => {
       if (u) setUser(u);
@@ -45,7 +46,6 @@ const StallDetails = () => {
 
   const uid = user?.uid;
 
-  // ✅ Get Firebase token
   const getFirebaseToken = async () => {
     try {
       const currentUser = auth.currentUser;
@@ -60,7 +60,6 @@ const StallDetails = () => {
     }
   };
 
-  // ✅ Fetch Stall details
   const fetchStall = async () => {
     try {
       setLoading(true);
@@ -78,32 +77,28 @@ const StallDetails = () => {
     fetchStall();
   }, [id]);
 
-  // ✅ Fetch Cart
- const fetchCart = async () => {
-  if (!user || !id) return;
-  try {
-    setCartLoading(true);
-    const token = await getFirebaseToken();
-    const res = await axios.get(`${BACKEND_URI}/api/stallCart/${user.uid}/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const stallId = res.data?.stallId || id;
-    const items = res.data?.items || [];
-
-    setCart(items.map((item) => ({ ...item, stallId })));
-  } catch (err) {
-    console.error("Error loading cart:", err);
-  } finally {
-    setCartLoading(false);
-  }
-};
+  const fetchCart = async () => {
+    if (!user || !id) return;
+    try {
+      setCartLoading(true);
+      const token = await getFirebaseToken();
+      const res = await axios.get(`${BACKEND_URI}/api/stallCart/${user.uid}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const stallId = res.data?.stallId || id;
+      const items = res.data?.items || [];
+      setCart(items.map((item) => ({ ...item, stallId })));
+    } catch (err) {
+      console.error("Error loading cart:", err);
+    } finally {
+      setCartLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (uid) fetchCart();
   }, [uid, id]);
 
-  // ✅ Add item
   const addToCart = async (menuItem) => {
     if (!uid) return toast.error("Please log in first");
     setCartOpen(true);
@@ -127,7 +122,6 @@ const StallDetails = () => {
     }
   };
 
-  // ✅ Change Qty
   const changeQty = async (itemId, delta) => {
     if (!uid) return toast.error("Please log in first");
     try {
@@ -144,7 +138,6 @@ const StallDetails = () => {
     }
   };
 
-  // ✅ Remove Item
   const removeFromCart = async (itemId) => {
     if (!uid) return toast.error("Please log in first");
     try {
@@ -161,7 +154,6 @@ const StallDetails = () => {
     }
   };
 
-  // ✅ Clear Cart
   const clearCart = async () => {
     if (!uid) return;
     try {
@@ -176,40 +168,37 @@ const StallDetails = () => {
     }
   };
 
-  // ✅ Total
   const cartTotal = () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // ✅ Loading UI
   if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-950 text-white">
-        <Loader2 className="animate-spin text-yellow-400 w-10 h-10" />
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-[#0b0014] via-[#150021] to-black text-pink-400">
+        <Loader2 className="animate-spin text-pink-500 w-10 h-10" />
       </div>
     );
 
   if (!stall)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-950 text-gray-400">
+      <div className="flex justify-center items-center min-h-screen bg-[#0b0014] text-gray-400">
         Stall not found 😢
       </div>
     );
 
-  // ✅ MAIN UI
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white px-6 py-10">
+    <div className="min-h-screen bg-gradient-to-b from-[#0b0014] via-[#150021] to-black text-white px-6 py-10">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link
             to="/stalls"
-            className="inline-flex items-center gap-2 text-yellow-400 hover:text-yellow-300"
+            className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 transition"
           >
             <ArrowLeft size={18} /> Back
           </Link>
 
           <button
             onClick={() => setCartOpen((s) => !s)}
-            className="inline-flex items-center gap-2 bg-yellow-500 text-black px-3 py-2 rounded-md"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-pink-600 to-fuchsia-600 text-white shadow-[0_0_10px_#f472b6aa] hover:shadow-[0_0_15px_#f472b6] transition"
           >
             <ShoppingCart size={18} /> Cart ({cart.length})
           </button>
@@ -220,19 +209,21 @@ const StallDetails = () => {
           <img
             src={stall.imageUrl}
             alt={stall.name}
-            className="w-full h-64 object-cover rounded-2xl mb-6 border border-gray-800 shadow-lg"
+            className="w-full h-64 object-cover rounded-2xl mb-6 border border-pink-500/20 shadow-[0_0_25px_#f472b655]"
           />
         ) : (
-          <div className="w-full h-64 bg-gray-800 rounded-2xl mb-6 flex justify-center items-center text-gray-500 border border-gray-800">
-            <ImageIcon size={48} className="opacity-40" />
+          <div className="w-full h-64 bg-[#12001e] rounded-2xl mb-6 flex justify-center items-center text-pink-300 border border-pink-500/20">
+            <ImageIcon size={48} className="opacity-60" />
           </div>
         )}
 
         {/* Stall Info */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-lg mb-10">
-          <h1 className="text-4xl font-bold text-yellow-400 mb-2">{stall.name}</h1>
+        <div className="bg-[#12001e] border border-pink-500/20 rounded-2xl p-8 shadow-[0_0_10px_#f472b633] mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-fuchsia-400 bg-clip-text text-transparent mb-2">
+            {stall.name}
+          </h1>
           <p className="text-gray-300 mb-3">{stall.description}</p>
-          <div className="flex flex-wrap items-center gap-4 text-gray-400 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-pink-300 text-sm">
             <span className="flex items-center gap-1">
               <MapPin size={15} /> {stall.location || "Unknown location"}
             </span>
@@ -243,7 +234,7 @@ const StallDetails = () => {
         </div>
 
         {/* Menu */}
-        <h2 className="text-2xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+        <h2 className="text-2xl font-semibold text-pink-400 mb-6 flex items-center gap-2">
           <UtensilsCrossed size={22} /> Menu Items
         </h2>
 
@@ -252,21 +243,21 @@ const StallDetails = () => {
             {stall.menu.map((item) => (
               <div
                 key={item._id}
-                className="bg-gray-900 border border-gray-800 p-5 rounded-xl shadow-md hover:shadow-yellow-500/20 transition-all flex flex-col"
+                className="bg-[#180024] border border-pink-500/20 p-5 rounded-xl shadow-[0_0_15px_#f472b622] transition-all flex flex-col"
               >
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
                     alt={item.name}
-                    className="w-full h-40 object-cover rounded-lg mb-3 border border-gray-700"
+                    className="w-full h-40 object-cover rounded-lg mb-3 border border-pink-500/30"
                   />
                 ) : (
-                  <div className="w-full h-40 bg-gray-800 flex items-center justify-center rounded-lg mb-3 border border-gray-700 text-gray-500">
+                  <div className="w-full h-40 bg-[#1a002b] flex items-center justify-center rounded-lg mb-3 border border-pink-500/30 text-pink-400">
                     <ImageIcon size={28} className="opacity-50" />
                   </div>
                 )}
 
-                <h3 className="text-lg font-semibold text-yellow-300 mb-1">{item.name}</h3>
+                <h3 className="text-lg font-semibold text-pink-400 mb-1">{item.name}</h3>
                 <p className="text-gray-400 text-sm flex-1">
                   {item.description || "No description."}
                 </p>
@@ -274,7 +265,7 @@ const StallDetails = () => {
 
                 <button
                   onClick={() => addToCart(item)}
-                  className="mt-3 bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-2 rounded-md inline-flex items-center gap-2 justify-center"
+                  className="mt-3 btn-gradient hover:from-pink-500 hover:to-fuchsia-500 text-white px-3 py-2 rounded-md inline-flex items-center gap-2 justify-center shadow-[0_0_10px_#f472b6aa] transition-all"
                 >
                   <Plus size={14} /> Add
                 </button>
