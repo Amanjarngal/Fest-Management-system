@@ -83,7 +83,7 @@ const Navbar = () => {
   };
 
   const navItemsLeft = [
-    { name: "About", path: "/" },
+    { name: "About", path: "/about" },
     { name: "Events", path: "/eventSchedules" },
     { name: "Gallery", path: "/gallery" },
     { name: "Voting Zone", path: "/voting" },

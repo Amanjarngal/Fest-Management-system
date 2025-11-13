@@ -37,6 +37,7 @@ import CancelPage from "./components/Payment comp/CancelPage";
 import StallOrdersDashboard from "./pages/Dashboard/StallOrdersDashboard";
 import EventOrdersDashboard from "./pages/Dashboard/EventOrdersDashboard";
 import StallPage from "./pages/StallPage";
+import Contactus from "./pages/Contactus";
 
 function AppContent() {
   const location = useLocation();
@@ -89,6 +90,8 @@ function AppContent() {
         <Route path='/eventSchedules' element={<EventSchedule />} />
         <Route path='/pricing/:eventId' element={<PricingPage />} />
         <Route path='/cart' element={<CartPage />} />
+        <Route path='/contact' element={<Contactus />} />
+
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/cancel" element={<CancelPage />} />
 
