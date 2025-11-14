@@ -45,7 +45,7 @@ const HeroSection = () => {
             STEP INTO THE MEMORIES
           </button>
           <button
-            onClick={() => navigate("/tickets")}
+            onClick={() => navigate("/eventSchedules")}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 text-white font-semibold transition-all shadow-md hover:opacity-90"
           >
             BUY TICKETS

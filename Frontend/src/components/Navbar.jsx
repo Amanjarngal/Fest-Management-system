@@ -45,7 +45,7 @@ const Navbar = () => {
         // Token expired or user logged out
         localStorage.removeItem("authToken");
         setUser(null);
-        navigate("/login");
+        
       }
     });
 
@@ -64,7 +64,7 @@ const Navbar = () => {
       setUser(null);
       setRole(null);
       localStorage.removeItem("userRole");
-      navigate("/login");
+      // navigate("/login");
     }
   });
 

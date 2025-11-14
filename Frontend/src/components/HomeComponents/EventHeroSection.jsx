@@ -62,6 +62,7 @@ const EventHeroSection = () => {
       color: "#EC4899",
       borderColor: "#EC4899",
     }}
+    onClick={() => navigatory("/contact")}
     className="flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full font-semibold hover:text-pink-400 hover:border-pink-500 transition-all duration-300"
   >
     <span>Contact Us</span>
