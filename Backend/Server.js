@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
     console.log("🔴 A user disconnected:", socket.id);
   });
 });
- 
+
 app.use(notFound);
 app.use(errorHandler);
 
