@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 // Load service account key
 const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "../serviceAccountKey.json"), "utf8")
+  fs.readFileSync(path.join(__dirname, process.env.FIREBASE_SERVICE_ACCOUNT), "utf8")
 );
 
 admin.initializeApp({
