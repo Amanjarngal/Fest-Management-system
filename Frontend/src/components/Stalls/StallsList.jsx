@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import { QrReader } from "react-qr-reader";
-
+import QrScanner from "react-qr-scanner";
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
 const StallsList = () => {
@@ -103,20 +102,24 @@ const StallsList = () => {
 
             {/* ✅ Fixed camera view */}
             <div className="rounded-xl overflow-hidden border-2 border-pink-500/60 w-[300px] h-[300px] mx-auto bg-black shadow-inner">
-              <QrReader
-                constraints={{
-                  facingMode: "environment", // change to "user" for front camera
-                }}
-                onResult={(result, error) => {
-                  if (!!result) handleScan(result?.text);
-                  if (!!error) console.warn(error);
-                }}
-                videoStyle={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
+             <QrScanner
+  onScan={(data) => {
+    if (data) {
+      handleScan(data); // data already contains the scanned text
+    }
+  }}
+  onError={(error) => console.warn(error)}
+  constraints={{
+    video: {
+      facingMode: "environment", // change to "user" for front camera
+    },
+  }}
+  style={{
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  }}
+/>
             </div>
 
             <p className="text-gray-400 text-sm mt-4 text-center">

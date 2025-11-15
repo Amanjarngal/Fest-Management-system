@@ -5,7 +5,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
-dotenv.config();
+dotenv.config({ path: "./env" });
 
 // ✅ Connect MongoDB
 connectDB();
