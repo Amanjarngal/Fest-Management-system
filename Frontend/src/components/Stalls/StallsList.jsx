@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import QrRender from "../QR/QrRender";   // ADD THIS import at the top
+import QrRender from "../../components/Stalls/QrRender";   // ADD THIS import at the top
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
