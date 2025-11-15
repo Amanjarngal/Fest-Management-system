@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import QrScanner from "react-qr-scanner";
+import QrRender from "../QR/QrRender";   // ADD THIS import at the top
+
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
 const StallsList = () => {
@@ -102,26 +103,12 @@ const StallsList = () => {
 
             {/* ✅ Fixed camera view */}
             <div className="rounded-xl overflow-hidden border-2 border-pink-500/60 w-[300px] h-[300px] mx-auto bg-black shadow-inner">
-          <QrReader
-  constraints={{
-    facingMode: "environment", // "user" for front camera
-  }}
-  onResult={(result, error) => {
-    if (!!result) {
-      handleScan(result?.text); // contains scanned QR value
-    }
-    if (!!error) {
-      console.warn(error);
-    }
-  }}
-  videoStyle={{
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  }}
-/>
+  <QrRender
+    onScan={(text) => handleScan(text)}
+    onError={(err) => console.warn("QR Error:", err)}
+  />
+</div>
 
-            </div>
 
             <p className="text-gray-400 text-sm mt-4 text-center">
               Point your camera at a stall QR to view its details.
