@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import StallsList from '../components/Stalls/stallsList'
+import StallsList from '../components/Stalls/StallsList'
 import StallHeroSection from '../components/Stalls/StallHeroSection'
 import StallRulesSection from '../components/Stalls/StallRulesSection'
 import FeedbackForm from '../components/HomeComponents/FeedbackForm'
