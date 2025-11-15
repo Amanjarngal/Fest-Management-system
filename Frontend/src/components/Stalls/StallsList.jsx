@@ -102,24 +102,25 @@ const StallsList = () => {
 
             {/* ✅ Fixed camera view */}
             <div className="rounded-xl overflow-hidden border-2 border-pink-500/60 w-[300px] h-[300px] mx-auto bg-black shadow-inner">
-             <QrScanner
-  onScan={(data) => {
-    if (data) {
-      handleScan(data); // data already contains the scanned text
+          <QrReader
+  constraints={{
+    facingMode: "environment", // "user" for front camera
+  }}
+  onResult={(result, error) => {
+    if (!!result) {
+      handleScan(result?.text); // contains scanned QR value
+    }
+    if (!!error) {
+      console.warn(error);
     }
   }}
-  onError={(error) => console.warn(error)}
-  constraints={{
-    video: {
-      facingMode: "environment", // change to "user" for front camera
-    },
-  }}
-  style={{
+  videoStyle={{
     width: "100%",
     height: "100%",
     objectFit: "cover",
   }}
 />
+
             </div>
 
             <p className="text-gray-400 text-sm mt-4 text-center">
