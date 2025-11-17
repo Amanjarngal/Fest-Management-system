@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 const stallOrderSchema = new mongoose.Schema(
   {
     uid: { type: String, required: true },
+
+    // ✅ ADD THIS
+    userName: { type: String,},
+
     stallId: { type: mongoose.Schema.Types.ObjectId, ref: "Stall", required: true },
     items: [
       {
@@ -20,5 +24,6 @@ const stallOrderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 
 export default mongoose.model("StallOrder", stallOrderSchema);

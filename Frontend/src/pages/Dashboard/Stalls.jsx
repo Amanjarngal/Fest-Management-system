@@ -283,12 +283,12 @@ const Stalls = () => {
                 >
                   <QrCode size={16} /> QR
                 </button>
-                <button
+                {/* <button
                   onClick={() => handleReset(stall._id)}
                   className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 px-4 py-2 rounded-lg text-black font-semibold"
                 >
                   <RefreshCw size={16} /> Reset
-                </button>
+                </button> */}
                 <button
                   onClick={() => setEditingStall(stall)}
                   className="flex items-center gap-2 bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-lg"

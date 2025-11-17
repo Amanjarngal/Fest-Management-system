@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import StallOrder from "../models/StallOrder.js";
 import StallCart from "../models/StallCart.js";
 import Stall from "../models/Stall.js"; // ✅ Needed to fetch item names
+import {admin} from "../config/firebase.js";
+
 
 dotenv.config();
 
@@ -53,26 +55,48 @@ export const verifyStallPayment = async (req, res) => {
       razorpay_signature,
     } = req.body;
 
-    // ✅ Validate input
+    // Fetch user details from Firebase
+let userName = "Unknown User";
+
+try {
+  const userRecord = await admin.auth().getUser(uid);
+  userName = userRecord.displayName || userRecord.email || "User";
+} catch (err) {
+  console.log("⚠️ Could not fetch user name:", err.message);
+}
+
+
+    // Validate input
     if (!stallId || !items?.length) {
       return res.status(400).json({ error: "Missing stallId or items" });
     }
 
-    // ✅ Verify Razorpay Signature
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "Missing payment verification fields" });
+    }
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ error: "Server misconfigured: Missing Razorpay Secret" });
+    }
+
+    // Verify Razorpay Signature
+    const sign = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign.toString())
+      .update(sign)
       .digest("hex");
 
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
 
-    // ✅ Fetch stall and find item names
+    // Fetch stall
     const stall = await Stall.findById(stallId);
     if (!stall) return res.status(404).json({ error: "Stall not found" });
 
+    if (!stall.items) stall.items = [];
+
+    // Add item names
     const enrichedItems = items.map((it) => {
       const found = stall.items.find(
         (s) => s._id.toString() === it.itemId.toString()
@@ -86,14 +110,15 @@ export const verifyStallPayment = async (req, res) => {
       };
     });
 
-    // ✅ Generate unique token
+    // Generate token
     const tokenNumber = Math.floor(1000 + Math.random() * 9000);
 
-    // ✅ Save Stall Order
+    // Save order
     const order = await StallOrder.create({
       uid,
+      userName, 
       stallId,
-      items: enrichedItems, // includes item names
+      items: enrichedItems,
       totalAmount,
       tokenNumber,
       razorpay_order_id,
@@ -102,7 +127,7 @@ export const verifyStallPayment = async (req, res) => {
       paymentStatus: "SUCCESS",
     });
 
-    // ✅ Clear Cart
+    // Clear cart
     await StallCart.findOneAndUpdate(
       { userId: uid },
       { $set: { items: [], totalPrice: 0 } },
@@ -111,15 +136,17 @@ export const verifyStallPayment = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Payment verified and order saved successfully",
+      message: "Payment verified successfully",
       tokenNumber,
       order,
     });
+
   } catch (err) {
     console.error("❌ Verify stall payment error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 /**
  * 📊 Get Stall Orders by Stall ID (includes item names)

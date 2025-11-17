@@ -153,7 +153,7 @@ const StallOrdersDashboard = () => {
                             <thead className="bg-[#111111] text-gray-300">
                               <tr>
                                 <th className="p-3 border border-gray-800">Token #</th>
-                                <th className="p-3 border border-gray-800">User ID</th>
+                                <th className="p-3 border border-gray-800">User Name</th>
                                 <th className="p-3 border border-gray-800">Items</th>
                                 <th className="p-3 border border-gray-800">Amount</th>
                                 <th className="p-3 border border-gray-800">Status</th>
@@ -173,9 +173,10 @@ const StallOrdersDashboard = () => {
                                   <td className="p-3 border border-gray-800 text-yellow-400 font-semibold">
                                     #{order.tokenNumber}
                                   </td>
-                                  <td className="p-3 border border-gray-800 text-xs text-gray-400">
-                                    {order.uid?.slice(0, 12) || "N/A"}...
-                                  </td>
+                                  <td className="p-3 border border-gray-800 text-gray-300 font-medium">
+  {order.userName || "Unknown User"}
+</td>
+
 
                                   {/* ✅ Updated Items Section */}
                                   <td className="p-3 border border-gray-800 text-gray-300">

@@ -69,6 +69,7 @@ const handleStallPayment = async () => {
   `${BACKEND_URI}/api/razorpay/stalls/verify-payment`,
   {
     uid: user.uid,
+    userName: user.displayName || "Unknown User",
     stallId: cart[0]?.stallId, // ✅ use actual stallId from cart items
     items: cart.map((it) => ({
       itemId: it.itemId, // ✅ send correct itemId
