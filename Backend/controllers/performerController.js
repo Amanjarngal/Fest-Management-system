@@ -1,5 +1,6 @@
-import  Performer  from "../models/Performer.js";
-import  Event  from "../models/Event.js"; // Make sure you have Event model
+import Performer from "../models/Performer.js";
+import Event from "../models/Event.js";
+import { uploadBuffer } from "../utils/cloudinaryUpload.js"; // ✅ Make sure this exists
 
 /**
  * @desc Add a new performer
@@ -8,48 +9,62 @@ import  Event  from "../models/Event.js"; // Make sure you have Event model
 export const addPerformer = async (req, res) => {
   try {
     const { name, eventId, role, day } = req.body;
-    const image = req.file?.path; // Cloudinary image URL
 
-    if (!name || !eventId || !image || !day) {
-      return res.status(400).json({ message: "All required fields missing!" });
+    if (!name || !eventId || !day) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    const performer = new Performer({
+    let imageUrl = null;
+
+    if (req.file) {
+      const upload = await uploadBuffer(req.file.buffer, "performers");
+      imageUrl = upload.secure_url;
+    }
+
+    const performer = await Performer.create({
       name,
       eventId,
       role,
-      image,
       day,
+      image: imageUrl,
     });
 
-    await performer.save();
     res.status(201).json({ success: true, performer });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
 
 /**
- * @desc Update performer (with optional new image)
+ * @desc Update performer
  * @route PUT /api/performers/:id
  */
 export const updatePerformer = async (req, res) => {
   try {
-    const updateData = { ...req.body };
-    if (req.file?.path) {
-      updateData.image = req.file.path; // new Cloudinary URL
+    let updateData = { ...req.body };
+
+    // If new image is uploaded
+    if (req.file) {
+      const upload = await uploadBuffer(req.file.buffer, "performers");
+      updateData.image = upload.secure_url;
     }
 
-    const updated = await Performer.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-    });
+    const updated = await Performer.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
-    if (!updated) return res.status(404).json({ message: "Performer not found" });
+    if (!updated)
+      return res.status(404).json({ message: "Performer not found" });
+
     res.status(200).json({ success: true, performer: updated });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -61,8 +76,9 @@ export const updatePerformer = async (req, res) => {
 export const getAllPerformers = async (req, res) => {
   try {
     const performers = await Performer.find()
-      .populate("eventId", "title date") // populate event info
+      .populate("eventId", "title date")
       .sort({ createdAt: -1 });
+
     res.status(200).json({ success: true, performers });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,9 +91,7 @@ export const getAllPerformers = async (req, res) => {
  */
 export const getPerformersByEvent = async (req, res) => {
   try {
-    const performers = await Performer.find({ eventId: req.params.eventId }).sort({
-      createdAt: -1,
-    });
+    const performers = await Performer.find({ eventId: req.params.eventId });
     res.status(200).json({ success: true, performers });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -85,7 +99,7 @@ export const getPerformersByEvent = async (req, res) => {
 };
 
 /**
- * @desc Get single performer by ID
+ * @desc Get single performer
  * @route GET /api/performers/:id
  */
 export const getPerformerById = async (req, res) => {
@@ -94,14 +108,15 @@ export const getPerformerById = async (req, res) => {
       "eventId",
       "title date"
     );
-    if (!performer) return res.status(404).json({ message: "Not found" });
+
+    if (!performer)
+      return res.status(404).json({ message: "Performer not found" });
+
     res.status(200).json({ success: true, performer });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 /**
  * @desc Delete performer
@@ -110,8 +125,10 @@ export const getPerformerById = async (req, res) => {
 export const deletePerformer = async (req, res) => {
   try {
     const performer = await Performer.findByIdAndDelete(req.params.id);
+
     if (!performer)
       return res.status(404).json({ message: "Performer not found" });
+
     res.status(200).json({ success: true, message: "Deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

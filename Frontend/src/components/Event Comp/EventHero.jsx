@@ -51,7 +51,7 @@ const EventHero = () => {
         >
           <div className="bg-gradient-to-br from-pink-600/10 via-purple-700/10 to-transparent border border-pink-500/30 rounded-2xl px-8 py-6 backdrop-blur-sm hover:scale-105 transition-all duration-300">
             <CalendarDays className="mx-auto text-pink-400 w-7 h-7 mb-2" />
-            <h3 className="text-lg font-semibold text-white">March 15–17, 2025</h3>
+            <h3 className="text-lg font-semibold text-white">Dec 5–7, 2025</h3>
             <p className="text-sm text-gray-400">3 Days of Pure Fun</p>
           </div>
 

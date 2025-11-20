@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 import {
   createStall,
@@ -21,69 +21,58 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/requireRoles.js";
 import { createOrder } from "../controllers/tokenCartController.js";
 
-// ✅ Cloudinary storage setup for stalls & items
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "fest_stalls", // your Cloudinary folder name
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  },
-});
-const upload = multer({ storage });
-
-// ✅ Router instance
 const router = express.Router();
 
-/* ---------------------------- 🔧 STALL ROUTES ---------------------------- */
+/* ------------ STALL ROUTES ------------ */
 
-// 🏪 Create a new stall (Admin only) — supports image upload
+// Create stall
 router.post(
   "/",
   verifyToken,
   requireRole("admin"),
-  upload.single("image"), // ✅ Upload stall image
+  upload.single("image"),
   createStall
 );
 
-// 🏪 Update an existing stall (Admin only) — supports image upload
+// Update stall
 router.put(
   "/:id",
   verifyToken,
   requireRole("admin"),
-  upload.single("image"), // ✅ Upload updated stall image
+  upload.single("image"),
   updateStall
 );
 
-// 🔐 Get logged-in stall owner's stalls
+// Get logged-in stall owner's stalls
 router.get("/my-stalls", verifyToken, getMyStalls);
 
-// 🌍 Public routes
+// Public routes
 router.get("/", getStalls);
 router.get("/:id", getStallById);
 
-// 🎟️ Token-related routes
+// Token routes
 router.post("/:id/token", generateToken);
 router.post("/:id/reset", verifyToken, requireRole("admin", "stallOwner"), resetTokens);
 
-// 🍔 Add a new menu item with image upload
+// Add item
 router.post(
   "/:id/item",
   verifyToken,
   requireRole("admin", "stallOwner"),
-  upload.single("image"), // ✅ Upload menu item image
+  upload.single("image"),
   addItem
 );
 
-// ✏️ Update existing menu item (optional new image)
+// Update item
 router.put(
   "/:id/item/:itemId",
   verifyToken,
   requireRole("admin", "stallOwner"),
-  upload.single("image"), // ✅ Upload new image if provided
+  upload.single("image"),
   updateItem
 );
 
-// 🗑️ Delete menu item
+// Delete item
 router.delete(
   "/:id/item/:itemId",
   verifyToken,
@@ -91,10 +80,10 @@ router.delete(
   deleteItem
 );
 
-// 🗑️ Delete stall (Admin only)
+// Delete stall
 router.delete("/:id", verifyToken, requireRole("admin"), deleteStall);
 
-// 🛒 Create order (includes payment + OCR verification)
+// Create stall order
 router.post(
   "/:id/order",
   verifyToken,

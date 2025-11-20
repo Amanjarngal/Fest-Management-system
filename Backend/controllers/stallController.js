@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { auth } from "../config/firebase.js";
 import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js"; // ✅ for deleting or managing images
+import { uploadBuffer } from "../utils/cloudinaryUpload.js";
 
 /* ------------------ CREATE STALL (Admin Only — Existing Owner Only) ------------------ */
 export const createStall = async (req, res, next) => {
@@ -10,27 +11,23 @@ export const createStall = async (req, res, next) => {
     const { name, email, ownerName, category, location, description } = req.body;
 
     if (!name || !email) {
-      return res
-        .status(400)
-        .json({ message: "Stall name and owner email are required." });
+      return res.status(400).json({ message: "Stall name and owner email are required." });
     }
 
-    // ✅ Check if the user exists in Firebase
+    // Check user exists in Firebase
     let firebaseUser;
     try {
       firebaseUser = await auth.getUserByEmail(email);
-      console.log(`✅ Found existing Firebase user for ${email}`);
-    } catch (err) {
+    } catch {
       return res.status(400).json({
         success: false,
-        message: `User with email ${email} not found. Ask them to sign up first.`,
+        message: `User ${email} not found. Ask them to sign up first.`,
       });
     }
 
-    // ✅ Assign stallOwner role
+    // Assign role
     await auth.setCustomUserClaims(firebaseUser.uid, { role: "stallOwner" });
 
-    // ✅ Update user in MongoDB
     await User.findOneAndUpdate(
       { email },
       {
@@ -38,39 +35,42 @@ export const createStall = async (req, res, next) => {
         role: "stallOwner",
         uid: firebaseUser.uid,
       },
-      { new: true }
+      { upsert: true, new: true }
     );
 
-    // ✅ Handle image upload (from multer)
-    const imageUrl = req.file?.path || "";
+    // Upload image using buffer
+    let imageUrl = "";
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, "fest_stalls");
+      imageUrl = uploaded.secure_url;
+    }
 
-    // ✅ Create stall
     const stall = await Stall.create({
       name,
       ownerUID: firebaseUser.uid,
       ownerName: ownerName || firebaseUser.displayName || "Stall Owner",
       ownerEmail: email,
-      category: category || "",
-      location: location || "",
-      description: description || "",
-      imageUrl, // ✅ Cloudinary image URL
+      category,
+      location,
+      description,
+      imageUrl,
     });
 
-    // ✅ Generate QR code for this stall
+    // Generate QR Code
     const qrLink = `${process.env.FRONTEND_URL}/stall/${stall._id}`;
     stall.qrCodeDataUrl = await QRCode.toDataURL(qrLink);
     await stall.save();
 
     res.status(201).json({
       success: true,
-      message: `🎪 Stall '${name}' created successfully with image.`,
+      message: "Stall created successfully!",
       stall,
     });
   } catch (error) {
-    console.error("❌ Error in createStall:", error.message);
     next(error);
   }
 };
+
 
 /* ------------------ UPDATE STALL (Admin — Reassign Owner if Changed, Existing User Only) ------------------ */
 export const updateStall = async (req, res, next) => {
@@ -78,67 +78,18 @@ export const updateStall = async (req, res, next) => {
     const { id } = req.params;
     const { name, category, location, description, ownerName, ownerEmail } = req.body;
 
-    console.log("🛠️ Incoming Update:", req.body);
     const stall = await Stall.findById(id);
     if (!stall) return res.status(404).json({ message: "Stall not found" });
 
-    const oldOwnerEmail = stall.ownerEmail;
-    const ownerChanged = ownerEmail && ownerEmail !== oldOwnerEmail;
-
-    // ✅ Handle owner change
-    if (ownerChanged) {
-      console.log(`🔄 Changing owner from ${oldOwnerEmail} → ${ownerEmail}`);
-
-      // Demote old owner
-      try {
-        const oldUserRecord = await auth.getUserByEmail(oldOwnerEmail);
-        await auth.setCustomUserClaims(oldUserRecord.uid, { role: "user" });
-      } catch (err) {
-        console.warn(`⚠️ Old owner ${oldOwnerEmail} not found in Firebase`);
-      }
-
-      await User.findOneAndUpdate({ email: oldOwnerEmail }, { role: "user" });
-
-      // Promote new owner (must exist)
-      let firebaseUser;
-      try {
-        firebaseUser = await auth.getUserByEmail(ownerEmail);
-      } catch {
-        return res.status(400).json({
-          success: false,
-          message: `User ${ownerEmail} must sign up before being assigned.`,
-        });
-      }
-
-      await auth.setCustomUserClaims(firebaseUser.uid, { role: "stallOwner" });
-
-      await User.findOneAndUpdate(
-        { email: ownerEmail },
-        {
-          name: ownerName || firebaseUser.displayName || "Stall Owner",
-          role: "stallOwner",
-          uid: firebaseUser.uid,
-        },
-        { upsert: true }
-      );
-
-      stall.ownerUID = firebaseUser.uid;
-      stall.ownerEmail = ownerEmail;
-      stall.ownerName = ownerName || firebaseUser.displayName || "Stall Owner";
-    }
-
-    // ✅ Handle image upload (optional new image)
-    if (req.file?.path) {
-      // Delete old image if present
+    // If new image uploaded — replace old Cloudinary image
+    if (req.file) {
       if (stall.imageUrl) {
         const publicId = stall.imageUrl.split("/").pop().split(".")[0];
-        try {
-          await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
-        } catch (err) {
-          console.warn("⚠️ Failed to delete old Cloudinary image:", err.message);
-        }
+        await cloudinary.uploader.destroy(`fest_stalls/${publicId}`).catch(() => {});
       }
-      stall.imageUrl = req.file.path;
+
+      const uploaded = await uploadBuffer(req.file.buffer, "fest_stalls");
+      stall.imageUrl = uploaded.secure_url;
     }
 
     stall.name = name || stall.name;
@@ -148,20 +99,20 @@ export const updateStall = async (req, res, next) => {
 
     await stall.save();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: ownerChanged
-        ? `✅ Stall updated & ownership transferred to ${ownerEmail}`
-        : "✅ Stall updated successfully",
+      message: "Stall updated successfully",
       stall,
     });
   } catch (error) {
-    console.error("❌ Error in updateStall:", error.message);
     next(error);
   }
 };
 
+
+
 /* ------------------ ADD MENU ITEM ------------------ */
+// ADD MENU ITEM
 export const addItem = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -170,26 +121,25 @@ export const addItem = async (req, res, next) => {
     const stall = await Stall.findById(id);
     if (!stall) return res.status(404).json({ message: "Stall not found" });
 
-    // Role check
-    if (req.user.role !== "admin" && req.user.uid !== stall.ownerUID) {
-      return res.status(403).json({ message: "Not authorized to modify this stall" });
+    let imageUrl = "";
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, "fest_stalls/items");
+      imageUrl = uploaded.secure_url;
     }
-
-    // ✅ Uploaded image from multer
-    const imageUrl = req.file?.path || "";
 
     stall.menu.push({ name, price, description, imageUrl });
     await stall.save();
 
     res.json({
       success: true,
-      message: "Item added successfully with image",
+      message: "Item added successfully",
       menu: stall.menu,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 /* ------------------ UPDATE MENU ITEM ------------------ */
 export const updateItem = async (req, res, next) => {
@@ -201,17 +151,14 @@ export const updateItem = async (req, res, next) => {
     const item = stall.menu.id(itemId);
     if (!item) return res.status(404).json({ message: "Item not found" });
 
-    // ✅ Delete old image if new one uploaded
-    if (req.file?.path) {
+    if (req.file) {
       if (item.imageUrl) {
         const publicId = item.imageUrl.split("/").pop().split(".")[0];
-        try {
-          await cloudinary.uploader.destroy(`fest_stalls/${publicId}`);
-        } catch (err) {
-          console.warn("⚠️ Failed to delete old item image:", err.message);
-        }
+        await cloudinary.uploader.destroy(`fest_stalls/${publicId}`).catch(() => {});
       }
-      item.imageUrl = req.file.path;
+
+      const uploaded = await uploadBuffer(req.file.buffer, "fest_stalls/items");
+      item.imageUrl = uploaded.secure_url;
     }
 
     item.name = req.body.name || item.name;
@@ -219,7 +166,6 @@ export const updateItem = async (req, res, next) => {
     item.description = req.body.description || item.description;
 
     await stall.save();
-
     res.json({
       success: true,
       message: "Item updated successfully",
@@ -229,6 +175,7 @@ export const updateItem = async (req, res, next) => {
     next(error);
   }
 };
+
 
 /* ------------------ DELETE ITEM ------------------ */
 export const deleteItem = async (req, res, next) => {
