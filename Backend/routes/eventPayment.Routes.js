@@ -1,7 +1,8 @@
 import express from "express";
-import { createEventOrder, getAllEventOrders, getEventOrders, verifyEventPayment } from "../controllers/eventPaymentController.js";
+import { createEventOrder, getAllEventOrders, getEventOrders, getUserOrders, verifyEventPayment } from "../controllers/eventPaymentController.js";
 
 const router = express.Router();
+router.get("/user-orders/:uid", getUserOrders);
 
 router.post("/create-order", createEventOrder);
 router.post("/verify-payment", verifyEventPayment);

@@ -14,9 +14,13 @@ const EventOrdersDashboard = () => {
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(false);
+
+  // ⭐ Search State
+  const [search, setSearch] = useState("");
+
   const auth = getAuth();
 
-  // ✅ Fetch all event orders with ticket details
+  // Fetch orders
   const fetchAllEventOrders = async () => {
     try {
       setLoading(true);
@@ -49,6 +53,11 @@ const EventOrdersDashboard = () => {
     fetchAllEventOrders();
   }, []);
 
+  // ⭐ Filter orders based on Ticket Order ID
+  const filteredOrders = orders.filter((order) =>
+    order.ticketOrderId?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 text-white px-6 py-10">
       <div className="max-w-7xl mx-auto">
@@ -60,6 +69,17 @@ const EventOrdersDashboard = () => {
           <p className="text-gray-400 mt-2 text-sm">
             View every order, ticket type, quantity, and total revenue in real-time
           </p>
+        </div>
+
+        {/* ⭐ Search bar */}
+        <div className="max-w-md mx-auto mb-10">
+          <input
+            type="text"
+            placeholder="Search by Ticket Order ID (e.g., TK-ABC123)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-pink-500 outline-none"
+          />
         </div>
 
         {/* Loading */}
@@ -81,9 +101,9 @@ const EventOrdersDashboard = () => {
             </div>
 
             {/* Orders Table */}
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
               <p className="text-gray-400 text-center mt-20 italic">
-                No event orders available yet.
+                No matching orders found.
               </p>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-gray-800 shadow-2xl bg-gray-900/60 backdrop-blur-md">
@@ -91,6 +111,7 @@ const EventOrdersDashboard = () => {
                   <thead className="bg-gradient-to-r from-purple-700/70 to-pink-700/70 text-gray-200 uppercase text-xs">
                     <tr>
                       <th className="p-3 border border-gray-800">#</th>
+                      <th className="p-3 border border-gray-800 text-center">Ticket Order ID</th>
                       <th className="p-3 border border-gray-800 text-left">User ID</th>
                       <th className="p-3 border border-gray-800 text-left">Event & Tickets</th>
                       <th className="p-3 border border-gray-800 text-center">Total Tickets</th>
@@ -99,8 +120,9 @@ const EventOrdersDashboard = () => {
                       <th className="p-3 border border-gray-800 text-center">Date</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {orders.map((order, index) => (
+                    {filteredOrders.map((order, index) => (
                       <tr
                         key={order.orderId}
                         className={`hover:bg-purple-700/10 transition-all ${
@@ -108,11 +130,15 @@ const EventOrdersDashboard = () => {
                         }`}
                       >
                         <td className="p-3 text-gray-400 border border-gray-800 text-center">{index + 1}</td>
+
+                        <td className="p-3 text-pink-400 font-semibold border border-gray-800 text-center">
+                          {order.ticketOrderId || "N/A"}
+                        </td>
+
                         <td className="p-3 text-gray-300 border border-gray-800 text-xs">
                           {order.userId ? `${order.userId.slice(0, 12)}...` : "Unknown"}
                         </td>
 
-                        {/* 🟣 Event & Ticket Info */}
                         <td className="p-3 border border-gray-800">
                           {order.items.map((item, i) => (
                             <div
@@ -137,17 +163,14 @@ const EventOrdersDashboard = () => {
                           ))}
                         </td>
 
-                        {/* Total tickets */}
                         <td className="p-3 border border-gray-800 text-center text-pink-400 font-semibold">
                           {order.items.reduce((sum, i) => sum + (i.quantity || 1), 0)}
                         </td>
 
-                        {/* Amount */}
                         <td className="p-3 border border-gray-800 text-green-400 font-bold text-center">
                           ₹{order.amount}
                         </td>
 
-                        {/* Payment Status */}
                         <td className="p-3 border border-gray-800 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -160,7 +183,6 @@ const EventOrdersDashboard = () => {
                           </span>
                         </td>
 
-                        {/* Date */}
                         <td className="p-3 border border-gray-800 text-gray-400 text-xs text-center">
                           {new Date(order.createdAt).toLocaleString()}
                         </td>
@@ -177,7 +199,7 @@ const EventOrdersDashboard = () => {
   );
 };
 
-// ✅ Reusable Summary Card Component
+// Summary Card Component
 const SummaryCard = ({ title, value, color }) => (
   <div className={`bg-gradient-to-r ${color} p-[1px] rounded-2xl shadow-lg`}>
     <div className="bg-gray-900 p-5 rounded-2xl h-full flex flex-col justify-between">

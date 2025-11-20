@@ -1,8 +1,17 @@
 import mongoose from "mongoose";
+import { nanoid } from "nanoid";
 
 const eventOrderSchema = new mongoose.Schema(
   {
+    ticketOrderId: {
+      type: String,
+      required: true,
+      unique: true,
+      default: () => "TK-" + nanoid(8).toUpperCase(),
+    },
+
     uid: { type: String, required: true },
+
     items: [
       {
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: "Event" },
@@ -11,11 +20,16 @@ const eventOrderSchema = new mongoose.Schema(
         price: { type: Number },
       },
     ],
+
     amount: { type: Number, required: true },
     razorpay_order_id: { type: String, required: true },
     razorpay_payment_id: { type: String, required: true },
     razorpay_signature: { type: String, required: true },
-    paymentStatus: { type: String, enum: ["SUCCESS", "FAILED"], default: "SUCCESS" },
+    paymentStatus: {
+      type: String,
+      enum: ["SUCCESS", "FAILED"],
+      default: "SUCCESS",
+    },
   },
   { timestamps: true }
 );

@@ -185,3 +185,29 @@ export const getStallOrders = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getUserStallOrders = async (req, res) => {
+  try {
+    const { uid } = req.params;
+
+    const orders = await StallOrder.find({ uid })
+      .sort({ createdAt: -1 })
+      .populate("stallId", "name")  // get stall name only
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+
+  } catch (err) {
+    console.error("❌ Error fetching user stall orders:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+
+
+

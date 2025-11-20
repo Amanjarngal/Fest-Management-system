@@ -84,10 +84,16 @@ export const verifyEventPayment = async (req, res) => {
     );
 
     res.status(200).json({
-      success: true,
-      message: "Payment verified, order saved, and cart cleared",
-      order,
-    });
+  success: true,
+  message: "Payment verified, order saved, and cart cleared",
+  order: {
+    _id: order._id,
+    ticketOrderId: order.ticketOrderId,
+    amount: order.amount,
+    items: order.items,
+  }
+});
+
   } catch (err) {
     console.error("❌ Verify event payment error:", err.message);
     res.status(500).json({ error: err.message });
@@ -157,13 +163,16 @@ export const getEventOrders = async (req, res) => {
  */
 export const getAllEventOrders = async (req, res) => {
   try {
-    // ✅ Fetch all orders, newest first
     const orders = await EventOrder.find()
       .sort({ createdAt: -1 })
       .populate({
         path: "items.eventId",
         model: Event,
         select: "title price day date location",
+      })
+      .populate({
+        path: "items.pricingId",
+        select: "ticketType finalPrice price",
       })
       .lean();
 
@@ -178,7 +187,6 @@ export const getAllEventOrders = async (req, res) => {
       });
     }
 
-    // ✅ Calculate totals
     const totalTickets = orders.reduce(
       (sum, order) =>
         sum +
@@ -191,21 +199,31 @@ export const getAllEventOrders = async (req, res) => {
       0
     );
 
-    // ✅ Prepare a detailed breakdown
     const detailedOrders = orders.map((order) => ({
       orderId: order._id,
+      ticketOrderId: order.ticketOrderId,
       userId: order.uid,
       amount: order.amount,
       paymentStatus: order.paymentStatus,
       createdAt: order.createdAt,
+
       items: order.items.map((i) => ({
         eventId: i.eventId?._id,
         title: i.eventId?.title || "Unknown Event",
         date: i.eventId?.date || "N/A",
         location: i.eventId?.location || "N/A",
+
+        // ⭐ ADDING TICKET TYPE
+        ticketName: i.pricingId?.ticketType || "General",
+
         quantity: i.quantity,
-        price: i.price || 0,
-        subtotal: (i.price || 0) * (i.quantity || 1),
+
+        // ⭐ Use final price if available
+        price: i.pricingId?.finalPrice || i.pricingId?.price || i.price || 0,
+
+        subtotal:
+          (i.pricingId?.finalPrice || i.pricingId?.price || i.price || 0) *
+          (i.quantity || 1),
       })),
     }));
 
@@ -219,6 +237,27 @@ export const getAllEventOrders = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error fetching all event orders:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+
+export const getUserOrders = async (req, res) => {
+  try {
+    const { uid } = req.params;
+
+    const orders = await EventOrder.find({ uid })
+      .sort({ createdAt: -1 })
+      .populate("items.eventId", "title date location")
+      .populate("items.pricingId", "ticketType finalPrice price");
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };

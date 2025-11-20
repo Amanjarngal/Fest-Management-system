@@ -15,6 +15,8 @@ import {
   Loader2,
   Image as ImageIcon,
 } from "lucide-react";
+import MyTickets from "../components/my Account/MyTickets";
+import MyStallOrders from "../components/my Account/MyStallOrders";
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -30,6 +32,8 @@ const MyAccount = () => {
     image: null,
   });
   const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [activeTab, setActiveTab] = useState("tickets");
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -155,16 +159,7 @@ const MyAccount = () => {
     }
   };
 
-  const handleGenerateToken = async (stallId) => {
-    try {
-      const res = await axios.post(`${BACKEND_URI}/api/stalls/${stallId}/token`);
-      toast.success(`New Token: ${res.data.tokenNumber}`);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to generate token.");
-    }
-  };
-
+ 
   const updateLocalStall = (updatedMenu, stallId) => {
     setStallData((prev) =>
       prev.map((s) => (s._id === stallId ? { ...s, menu: updatedMenu } : s))
@@ -216,6 +211,39 @@ const MyAccount = () => {
             </span>
           </div>
         </div>
+
+{/* ==================== TICKETS & STALL ORDERS SWITCH ==================== */}
+<div className="mt-10">
+  {/* Tabs */}
+  <div className="flex gap-4 mb-6">
+    <button
+      onClick={() => setActiveTab("tickets")}
+      className={`px-6 py-2 rounded-xl font-semibold transition ${
+        activeTab === "tickets"
+          ? "bg-pink-600 text-white"
+          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+      }`}
+    >
+      🎟️ My Event Tickets
+    </button>
+
+    <button
+      onClick={() => setActiveTab("stallOrders")}
+      className={`px-6 py-2 rounded-xl font-semibold transition ${
+        activeTab === "stallOrders"
+          ? "bg-emerald-600 text-white"
+          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+      }`}
+    >
+      🍽️ My Stall Orders
+    </button>
+  </div>
+
+  {/* Content */}
+  {activeTab === "tickets" && <MyTickets />}
+  {activeTab === "stallOrders" && <MyStallOrders />}
+</div>
+
 
         {/* Stall Management */}
         {(role === "stallOwner" || role === "admin") && stallData.length > 0 ? (

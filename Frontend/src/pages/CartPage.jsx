@@ -112,26 +112,34 @@ const handleCheckout = async () => {
       description: "Payment for your ticket cart",
       order_id: data.order.id,
       handler: async (response) => {
-  await axios.post(`${BACKEND_URI}/api/razorpay/events/verify-payment`, {
-    uid: user.uid,
-    amount: totalPrice,
-    items: cartItems.map(item => ({
-      eventId: item.pricingId.event._id,
-      pricingId: item.pricingId._id,
-      quantity: item.quantity,
-      price: item.pricingId.finalPrice || item.pricingId.price,
-    })),
-    razorpay_order_id: response.razorpay_order_id,
-    razorpay_payment_id: response.razorpay_payment_id,
-    razorpay_signature: response.razorpay_signature,
-  });
+  const verifyRes = await axios.post(
+    `${BACKEND_URI}/api/razorpay/events/verify-payment`,
+    {
+      uid: user.uid,
+      amount: totalPrice,
+      items: cartItems.map(item => ({
+        eventId: item.pricingId.event._id,
+        pricingId: item.pricingId._id,
+        quantity: item.quantity,
+        price: item.pricingId.finalPrice || item.pricingId.price,
+      })),
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+    }
+  );
 
-  // ✅ Clear local cart immediately
   setCartItems([]);
 
-  alert("🎉 Payment successful!");
-  navigate("/success");
-},
+  navigate("/success", {
+    state: {
+      ticketOrderId: verifyRes.data.order.ticketOrderId,
+      amount: verifyRes.data.order.amount,
+      items: verifyRes.data.order.items,
+    },
+  });
+}
+,
 
       prefill: {
         name: user.displayName || "Fest Attendee",
