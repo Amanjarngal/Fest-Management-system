@@ -12,7 +12,10 @@ app.use(express.urlencoded({extended: true}));
 
 app.use(
   cors({
-    origin: "https://festomania0.netlify.app", // <-- exact origin of your frontend
+    origin: [
+      "https://festomania0.netlify.app",  // your frontend on netlify
+      "http://localhost:5173",           // vite dev frontend
+    ], // <-- exact origin of your frontend
     credentials: true,               // <-- allow cookies/credentials
     allowedHeaders: ["Content-Type", "Authorization"], // include Authorization
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

@@ -16,7 +16,10 @@ const server = http.createServer(app);
 // ✅ Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", // your frontend origin  
+    origin: [
+      "https://festomania0.netlify.app",  // your frontend on netlify
+      "http://localhost:5173",           // vite dev frontend
+    ], // your frontend origin  
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
