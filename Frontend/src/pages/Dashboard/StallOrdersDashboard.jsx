@@ -208,7 +208,7 @@ const StallOrdersDashboard = () => {
                                     </span>
                                   </td>
                                   <td className="p-3 border border-gray-800 text-xs text-gray-400">
-                                    {new Date(order.createdAt).toLocaleString()}
+                                    {new Date(order.createdAt)?.toLocaleString()}
                                   </td>
                                 </tr>
                               ))}

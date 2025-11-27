@@ -141,7 +141,7 @@ const DashboardPage = () => {
         />
         <SummaryCard
           title="Event Earnings (₹)"
-          value={stats.eventEarnings.toLocaleString()}
+          value={stats.eventEarnings?.toLocaleString()}
           icon={<Coins className="text-green-400 w-10 h-10" />}
           color="from-emerald-500 to-green-400"
         />
@@ -153,7 +153,7 @@ const DashboardPage = () => {
         />
         <SummaryCard
           title="Stall Earnings (₹)"
-          value={stats.stallEarnings.toLocaleString()}
+          value={stats.stallEarnings?.toLocaleString()}
           icon={<Coins className="text-cyan-400 w-10 h-10" />}
           color="from-cyan-500 to-blue-400"
         />
@@ -174,13 +174,13 @@ const DashboardPage = () => {
                 cy="50%"
                 outerRadius={120}
                 dataKey="value"
-                label={({ name, value }) => `${name}: ₹${value.toLocaleString()}`}
+                label={({ name, value }) => `${name}: ₹${value?.toLocaleString()}`}
               >
                 {earningsData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} />
+              <Tooltip formatter={(v) => `₹${v?.toLocaleString()}`} />
             </PieChart>
           </ResponsiveContainer>
         </div>

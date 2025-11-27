@@ -95,7 +95,7 @@ const EventOrdersDashboard = () => {
               <SummaryCard title="Tickets Sold" value={summary.totalTickets} color="from-pink-500 to-yellow-400" />
               <SummaryCard
                 title="Total Revenue"
-                value={`₹${summary.totalRevenue.toLocaleString()}`}
+                value={`₹${summary.totalRevenue?.toLocaleString()}`}
                 color="from-green-500 to-emerald-400"
               />
             </div>
@@ -184,7 +184,7 @@ const EventOrdersDashboard = () => {
                         </td>
 
                         <td className="p-3 border border-gray-800 text-gray-400 text-xs text-center">
-                          {new Date(order.createdAt).toLocaleString()}
+                          {new Date(order.createdAt)?.toLocaleString()}
                         </td>
                       </tr>
                     ))}

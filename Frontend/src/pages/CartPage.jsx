@@ -240,7 +240,7 @@ useEffect(() => {
                           item.pricingId?.finalPrice ||
                           item.pricingId?.price ||
                           0
-                        ).toLocaleString()}
+                        )?.toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -277,7 +277,7 @@ useEffect(() => {
             <div className="flex justify-between items-center mt-8 bg-gray-900 rounded-xl p-6 border border-gray-800">
               <h3 className="text-xl font-semibold">Total</h3>
               <p className="text-2xl font-bold text-pink-400">
-                ₹{totalPrice.toLocaleString()}
+                ₹{totalPrice?.toLocaleString()}
               </p>
             </div>
 

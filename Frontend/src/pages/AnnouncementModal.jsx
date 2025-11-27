@@ -71,7 +71,7 @@ const AnnouncementModal = ({ isOpen, onClose }) => {
                 </h3>
                 <p className="text-gray-200 mt-1 leading-relaxed">{a.message}</p>
                 <p className="text-xs text-gray-400 mt-2">
-                  🕒 {new Date(a.createdAt).toLocaleString()}
+                  🕒 {new Date(a.createdAt)?.toLocaleString()}
                 </p>
               </div>
             ))}

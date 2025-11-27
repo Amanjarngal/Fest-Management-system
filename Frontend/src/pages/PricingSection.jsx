@@ -186,19 +186,19 @@ const PricingSection = () => {
                     {tier.offer?.active ? (
                       <>
                         <p className="text-3xl font-bold text-green-400">
-                          ₹{tier.finalPrice.toLocaleString()}
+                          ₹{tier.finalPrice?.toLocaleString()}
                         </p>
                         <p className="text-sm text-yellow-400 flex justify-center items-center gap-1">
                           <Percent size={14} /> {tier.offer.percentage}% off till{" "}
                           {new Date(tier.offer.expiry).toLocaleDateString()}
                         </p>
                         <p className="line-through text-gray-500 text-sm">
-                          ₹{tier.price.toLocaleString()}
+                          ₹{tier.price?.toLocaleString()}
                         </p>
                       </>
                     ) : (
                       <p className="text-4xl font-extrabold mt-2 text-pink-400">
-                        ₹{tier.price.toLocaleString()}
+                        ₹{tier.price?.toLocaleString()}
                       </p>
                     )}
                   </div>

@@ -125,7 +125,7 @@ const FeedbackDashboard = () => {
                   </p>
 
                   <p className="text-gray-500 text-xs">
-                    {new Date(f.createdAt).toLocaleString()}
+                    {new Date(f.createdAt)?.toLocaleString()}
                   </p>
                 </div>
               </div>
