@@ -206,6 +206,7 @@ export const getAllEventOrders = async (req, res) => {
       amount: order.amount,
       paymentStatus: order.paymentStatus,
       createdAt: order.createdAt,
+       isAlloted: order.isAlloted,          // ⭐ ADD THIS
 
       items: order.items.map((i) => ({
         eventId: i.eventId?._id,
@@ -258,6 +259,31 @@ export const getUserOrders = async (req, res) => {
       orders,
     });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const allotEventTicket = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+
+    const order = await EventOrder.findById(orderId);
+    if (!order)
+      return res.status(404).json({ error: "Order not found" });
+
+    order.isAlloted = true;
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Ticket Alloted Successfully",
+      order: {
+    _id: order._id,
+    isAlloted: order.isAlloted, // ⭐ MUST RETURN THIS
+  }
+    });
+  } catch (err) {
+    console.error("❌ ALLOT ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };

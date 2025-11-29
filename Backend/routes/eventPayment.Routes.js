@@ -1,5 +1,7 @@
 import express from "express";
-import { createEventOrder, getAllEventOrders, getEventOrders, getUserOrders, verifyEventPayment } from "../controllers/eventPaymentController.js";
+import { allotEventTicket, createEventOrder, getAllEventOrders, getEventOrders, getUserOrders, verifyEventPayment } from "../controllers/eventPaymentController.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
+import { requireRole } from "../middleware/requireRoles.js";
 
 const router = express.Router();
 router.get("/user-orders/:uid", getUserOrders);
@@ -11,4 +13,11 @@ router.get("/event/:eventId", getEventOrders);
 
 // ✅ New route (all events combined)
 router.get("/all-orders", getAllEventOrders);
+router.put(
+  "/allot/:orderId",
+  verifyToken,
+  requireRole("admin"),
+  allotEventTicket
+);
+
 export default router;

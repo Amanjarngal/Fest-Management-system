@@ -1,11 +1,6 @@
 import User from "../models/User.js";
 import { auth } from "../config/firebase.js";
 
-/**
- * ✅ Get all users — combines Firebase & MongoDB data
- *  - Fetches from Firebase (to get roles & claims)
- *  - Merges with MongoDB records (to show extra info like name, createdAt)
- */
 export const getAllUsers = async (req, res) => {
   try {
     // Fetch users from Firebase Admin SDK

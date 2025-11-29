@@ -21,6 +21,12 @@ const stallOrderSchema = new mongoose.Schema(
 
     tokenNumber: { type: Number, required: true, unique: true },
 
+    orderStatus: {
+  type: String,
+  enum: ["PENDING", "COMPLETED"],
+  default: "PENDING",
+},
+
     razorpay_order_id: { type: String, required: true },
     razorpay_payment_id: { type: String, required: true },
     razorpay_signature: { type: String, required: true },

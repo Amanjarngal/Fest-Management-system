@@ -92,23 +92,23 @@ try {
 
     // Fetch stall
     const stall = await Stall.findById(stallId);
-    if (!stall) return res.status(404).json({ error: "Stall not found" });
+    // FIX: use stall.menu not stall.items
+if (!stall.menu) stall.menu = [];
 
-    if (!stall.items) stall.items = [];
+const enrichedItems = items.map((it) => {
+  const found = stall.menu.find(
+    (m) => m._id.toString() === it.itemId.toString()
+  );
 
-    // Add item names
-    const enrichedItems = items.map((it) => {
-      const found = stall.items.find(
-        (s) => s._id.toString() === it.itemId.toString()
-      );
-      return {
-        itemId: it.itemId,
-        name: found?.name || "Unknown Item",
-        price: it.price,
-        quantity: it.quantity,
-        imageUrl: found?.imageUrl || "",
-      };
-    });
+  return {
+    itemId: it.itemId,
+    name: found?.name || "Unknown Item",
+    price: it.price,
+    quantity: it.quantity,
+    imageUrl: found?.imageUrl || "",
+  };
+});
+
 
     // Generate token
     const tokenNumber = Math.floor(1000 + Math.random() * 9000);

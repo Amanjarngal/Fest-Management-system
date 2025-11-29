@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Loader2, Ticket, Calendar, MapPin } from "lucide-react";
+import { Loader2, Ticket, Calendar, MapPin, CheckCircle } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import toast from "react-hot-toast";
 
@@ -14,13 +14,11 @@ const EventOrdersDashboard = () => {
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(false);
-
-  // ⭐ Search State
   const [search, setSearch] = useState("");
 
   const auth = getAuth();
 
-  // Fetch orders
+  // ======================= FETCH ALL ORDERS =======================
   const fetchAllEventOrders = async () => {
     try {
       setLoading(true);
@@ -38,8 +36,6 @@ const EventOrdersDashboard = () => {
           totalTickets: res.data.totalTickets,
           totalRevenue: res.data.totalRevenue,
         });
-      } else {
-        toast.error("No event orders found");
       }
     } catch (err) {
       console.error("❌ Error fetching all event orders:", err);
@@ -53,25 +49,55 @@ const EventOrdersDashboard = () => {
     fetchAllEventOrders();
   }, []);
 
-  // ⭐ Filter orders based on Ticket Order ID
+  // ======================= SEARCH FILTER =======================
   const filteredOrders = orders.filter((order) =>
     order.ticketOrderId?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ======================= ALLOT TICKET =======================
+  const allotTicket = async (orderId) => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return toast.error("Unauthorized!");
+
+      const res = await axios.put(
+        `${BACKEND_URI}/api/razorpay/events/allot/${orderId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("🎉 Ticket Alloted Successfully!");
+
+      // Update UI instantly
+      setOrders(prev =>
+  prev.map(order =>
+    order.orderId === orderId || order._id === orderId
+      ? { ...order, isAlloted: true }
+      : order
+  )
+);
+
+    } catch (error) {
+      console.error("❌ Ticket allot error:", error);
+      toast.error("Failed to allot ticket");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 text-white px-6 py-10">
       <div className="max-w-7xl mx-auto">
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             🎟️ All Event Orders & Ticket Summary
           </h1>
           <p className="text-gray-400 mt-2 text-sm">
-            View every order, ticket type, quantity, and total revenue in real-time
+            View and allot event tickets to attendees
           </p>
         </div>
 
-        {/* ⭐ Search bar */}
+        {/* Search Bar */}
         <div className="max-w-md mx-auto mb-10">
           <input
             type="text"
@@ -82,7 +108,7 @@ const EventOrdersDashboard = () => {
           />
         </div>
 
-        {/* Loading */}
+        {/* Loading State */}
         {loading ? (
           <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -116,7 +142,10 @@ const EventOrdersDashboard = () => {
                       <th className="p-3 border border-gray-800 text-left">Event & Tickets</th>
                       <th className="p-3 border border-gray-800 text-center">Total Tickets</th>
                       <th className="p-3 border border-gray-800 text-center">Total Amount</th>
-                      <th className="p-3 border border-gray-800 text-center">Payment Status</th>
+
+                      {/* ⭐ NEW COLUMN FOR ALLOTMENT */}
+                      <th className="p-3 border border-gray-800 text-center">Allot</th>
+
                       <th className="p-3 border border-gray-800 text-center">Date</th>
                     </tr>
                   </thead>
@@ -132,13 +161,14 @@ const EventOrdersDashboard = () => {
                         <td className="p-3 text-gray-400 border border-gray-800 text-center">{index + 1}</td>
 
                         <td className="p-3 text-pink-400 font-semibold border border-gray-800 text-center">
-                          {order.ticketOrderId || "N/A"}
+                          {order.ticketOrderId}
                         </td>
 
                         <td className="p-3 text-gray-300 border border-gray-800 text-xs">
                           {order.userId ? `${order.userId.slice(0, 12)}...` : "Unknown"}
                         </td>
 
+                        {/* Event & Ticket details */}
                         <td className="p-3 border border-gray-800">
                           {order.items.map((item, i) => (
                             <div
@@ -155,7 +185,7 @@ const EventOrdersDashboard = () => {
                                 </span>
                               </p>
                               <div className="flex justify-between items-center mt-2 text-sm text-gray-300">
-                                <span>🎫 Ticket Name: {item.ticketName || "General"}</span>
+                                <span>🎫 {item.ticketName}</span>
                                 <span>Qty: {item.quantity}</span>
                                 <span>₹{item.subtotal}</span>
                               </div>
@@ -171,24 +201,29 @@ const EventOrdersDashboard = () => {
                           ₹{order.amount}
                         </td>
 
+                        {/* ================== ALLOT BUTTON ================== */}
                         <td className="p-3 border border-gray-800 text-center">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              order.paymentStatus === "SUCCESS"
-                                ? "bg-green-600/20 text-green-400"
-                                : "bg-red-600/20 text-red-400"
-                            }`}
-                          >
-                            {order.paymentStatus}
-                          </span>
+                          {order.isAlloted ? (
+                            <span className="text-green-400 font-bold flex items-center justify-center gap-1">
+                              <CheckCircle size={18} /> Alloted
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => allotTicket(order.orderId)}
+                              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white text-sm transition"
+                            >
+                              Allot Ticket
+                            </button>
+                          )}
                         </td>
 
                         <td className="p-3 border border-gray-800 text-gray-400 text-xs text-center">
-                          {new Date(order.createdAt)?.toLocaleString()}
+                          {new Date(order.createdAt).toLocaleString()}
                         </td>
                       </tr>
                     ))}
                   </tbody>
+
                 </table>
               </div>
             )}
@@ -199,7 +234,7 @@ const EventOrdersDashboard = () => {
   );
 };
 
-// Summary Card Component
+// Summary Card
 const SummaryCard = ({ title, value, color }) => (
   <div className={`bg-gradient-to-r ${color} p-[1px] rounded-2xl shadow-lg`}>
     <div className="bg-gray-900 p-5 rounded-2xl h-full flex flex-col justify-between">

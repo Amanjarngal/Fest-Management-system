@@ -30,6 +30,11 @@ const eventOrderSchema = new mongoose.Schema(
       enum: ["SUCCESS", "FAILED"],
       default: "SUCCESS",
     },
+     // ⭐ NEW FIELD — ADMIN ALLOT TICKET
+    isAlloted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

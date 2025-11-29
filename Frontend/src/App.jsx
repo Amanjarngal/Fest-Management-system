@@ -38,6 +38,7 @@ import StallOrdersDashboard from "./pages/Dashboard/StallOrdersDashboard";
 import EventOrdersDashboard from "./pages/Dashboard/EventOrdersDashboard";
 import StallPage from "./pages/StallPage";
 import Contactus from "./pages/Contactus";
+import StallOwnerDashboard from "./pages/StallOwnerDashboard";
 
 function AppContent() {
   const location = useLocation();
@@ -91,6 +92,8 @@ function AppContent() {
         <Route path='/pricing/:eventId' element={<PricingPage />} />
         <Route path='/cart' element={<CartPage />} />
         <Route path='/contact' element={<Contactus />} />
+        <Route path="/stall-dashboard" element={<StallOwnerDashboard />} />
+
 
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/cancel" element={<CancelPage />} />

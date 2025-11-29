@@ -4,6 +4,7 @@ import { auth } from "../config/firebase.js";
 import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js"; // ✅ for deleting or managing images
 import { uploadBuffer } from "../utils/cloudinaryUpload.js";
+import StallOrder from "../models/StallOrder.js";
 
 /* ------------------ CREATE STALL (Admin Only — Existing Owner Only) ------------------ */
 export const createStall = async (req, res, next) => {
@@ -332,3 +333,66 @@ export const getMyStalls = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getOwnerDashboard = async (req, res) => {
+  try {
+    const ownerUID = req.user.uid;
+
+    // Fetch stalls for this owner
+    const stalls = await Stall.find({ ownerUID });
+
+    let allOrders = [];
+    let totalEarnings = 0;
+
+    for (let stall of stalls) {
+      const orders = await StallOrder.find({ stallId: stall._id }).sort({ createdAt: -1 });
+
+      // Add to overall order list
+      allOrders.push(...orders);
+
+      // Add stall-wise earnings
+      totalEarnings += orders.reduce(
+        (sum, order) => sum + (order.totalAmount || 0),
+        0
+      );
+    }
+
+    res.json({
+      success: true,
+      stalls,
+      orders: allOrders,
+      totalEarnings,
+      orderCount: allOrders.length,
+    });
+
+  } catch (err) {
+    console.error("❌ DASHBOARD ERROR:", err);
+    res.status(500).json({ error: "Failed to load stall owner dashboard" });
+  }
+};
+
+export const markOrderCompleted = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    console.log("Updating order:", orderId);
+
+    const order = await StallOrder.findById(orderId);
+    if (!order)
+      return res.status(404).json({ error: "Order not found" });
+
+    order.orderStatus = "COMPLETED";
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Order marked as completed",
+      order,
+    });
+
+  } catch (error) {
+    console.error("❌ Error marking order complete:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+

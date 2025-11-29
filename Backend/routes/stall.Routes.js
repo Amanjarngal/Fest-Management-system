@@ -15,6 +15,8 @@ import {
   deleteItem,
   updateItem,
   getMyStalls,
+  getOwnerDashboard,
+  markOrderCompleted,
 } from "../controllers/stallController.js";
 
 import { verifyToken } from "../middleware/auth.middleware.js";
@@ -90,5 +92,9 @@ router.post(
   upload.single("paymentScreenshot"),
   createOrder
 );
+router.get("/owner/dashboard", verifyToken, requireRole("stallOwner"), getOwnerDashboard);
+router.put("/order/:id/complete", verifyToken, requireRole("stallOwner"), markOrderCompleted);
+
+
 
 export default router;

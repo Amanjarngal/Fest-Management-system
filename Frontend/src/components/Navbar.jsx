@@ -152,11 +152,11 @@ const Navbar = () => {
                   <User size={25} className="text-purple-400" />
                 </button>
 
-               {accountDropdown && (
+      {accountDropdown && (
   <ul className="absolute right-0 bg-black border border-gray-800 rounded-lg shadow-lg w-44 text-base">
     {user ? (
       <>
-        {/* ✅ Only show if Firebase role = admin */}
+        {/* ✅ ADMIN DASHBOARD */}
         {role === "admin" && (
           <li>
             <Link
@@ -168,6 +168,19 @@ const Navbar = () => {
           </li>
         )}
 
+        {/* ✅ STALL OWNER DASHBOARD */}
+        {role === "stallOwner"  && (
+          <li>
+            <Link
+              to="/stall-dashboard"
+              className="block px-4 py-2 hover:bg-purple-900"
+            >
+              Stall Dashboard
+            </Link>
+          </li>
+        )}
+
+        {/* My Account */}
         <li>
           <Link
             to="/account"
@@ -176,6 +189,8 @@ const Navbar = () => {
             My Account
           </Link>
         </li>
+
+        {/* Logout */}
         <li>
           <button
             onClick={handleLogout}
@@ -197,6 +212,7 @@ const Navbar = () => {
     )}
   </ul>
 )}
+
 
               </div>
 
